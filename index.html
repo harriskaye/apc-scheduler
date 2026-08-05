@@ -174,7 +174,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .gprog{flex:0 0 80px;height:5px;border-radius:3px;background:#e9e1d5;overflow:hidden;margin-left:auto}
 .gprog i{display:block;height:100%;background:var(--orchard)}
 .grouphdr{scroll-margin-top:118px}
-.timelabel{position:absolute;top:9px;font-size:.62rem;font-weight:700;color:var(--ink-soft);white-space:nowrap;pointer-events:none;z-index:1}
+.timelabel{position:absolute;top:10px;font-size:.62rem;font-weight:700;color:var(--ink-soft);white-space:nowrap;pointer-events:none;z-index:1}
 .timelabel.flip{transform:translateX(-100%)}
 .rolecol .newtag{background:var(--apple);color:#fff;border-radius:3px;font-size:.55rem;font-weight:700;padding:1px 4px;margin-left:6px;display:inline-block;vertical-align:1px}
 .gpct{font-family:'Public Sans',sans-serif;font-size:.68rem;font-weight:700;color:var(--orchard);min-width:34px;text-align:right;font-variant-numeric:tabular-nums;flex:none}
@@ -399,14 +399,14 @@ const SNAPSHOT = [
 ];
 
 const PHASES = [
- {name:"Setup", s:4.5, e:7.5, row:0},
- {name:"Prep", s:7.5, e:8.25, row:0},
- {name:"Pie check-in", s:7.75, e:9.75, row:1},
- {name:"Judging", s:9.25, e:10.33, row:0},
- {name:"Scoring", s:10.33, e:10.83, row:1},
- {name:"Winners!", s:10.83, e:11.25, row:0},
- {name:"Pie sales", s:10.75, e:12.5, row:2},
- {name:"Breakdown", s:11.75, e:13.5, row:0},
+ {name:"Setup", s:4.5, e:7.5, row:0, area:"Pre-Market Operations"},
+ {name:"Prep", s:7.5, e:8.25, row:0, area:"Pre-Event Prep"},
+ {name:"Pie check-in", s:7.75, e:9.75, row:1, area:"Sign-In Table"},
+ {name:"Judging", s:9.25, e:10.33, row:0, area:"Gazebo — Judging"},
+ {name:"Scoring", s:10.33, e:10.83, row:1, area:"Gazebo — Judging"},
+ {name:"Winners!", s:10.83, e:11.25, row:0, area:"Results & Announcement"},
+ {name:"Pie sales", s:10.75, e:12.5, row:2, area:"Pie Sales"},
+ {name:"Breakdown", s:11.75, e:13.5, row:0, area:"End of Day"},
 ];
 
 /* ---------------- helpers ---------------- */
@@ -553,7 +553,7 @@ function renderSky(){
     // every bar spans its real duration; narrow ones drop the time text (hover/tap title has it)
     const short = span < 2.2;
     const label = p.name; // times live on the axis below and in the tooltip
-    html += `<button class="phase ${short?'short':''}" style="left:${pct(p.s)}%;width:${pct(p.e)-pct(p.s)}%;top:${top}px" data-jump="1" data-s="${p.s}" data-e="${p.e}" title="${p.name} · ${timeStr}">${label}</button>`;
+    html += `<button class="phase ${short?'short':''}" style="left:${pct(p.s)}%;width:${pct(p.e)-pct(p.s)}%;top:${top}px" data-jump="1" data-area="${p.area}" title="${p.name} · ${timeStr}">${label}</button>`;
   });
   const nh = nowHours();
   if(dayofOn && nh > DAY_START && nh < DAY_END){
@@ -611,7 +611,7 @@ function renderSched(){
       const width = Math.max(pct(r.end)-pct(r.start), 3.5);
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
       const dur = r.end - r.start;
-      const inside = dur >= 1.75; // enough room to print the range inside the bar
+      const inside = dur >= 1.0; // an hour-wide bar fits its time range at this page width
       html += `<button class="bar ${s} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${inside ? fullTimes : ''}</button>`;
       if(!inside){
         const flip = r.end > 12.5; // near the right edge: print the label to the left of the bar instead
@@ -703,16 +703,17 @@ document.addEventListener("click", e=>{
   }
   const jump = e.target.closest("[data-jump]");
   if(jump){
-    const s=+jump.dataset.s, en=+jump.dataset.e;
-    const groups = groupRoles();
-    for(let gi=0; gi<groups.length; gi++){
-      if(groups[gi].roles.some(r=>match(r) && r.start<en && r.end>s)){
-        if(collapsed.has(groups[gi].name)){ collapsed.delete(groups[gi].name); renderSched(); }
-        const el = document.getElementById("grp-"+gi);
-        if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
-        break;
-      }
+    const a = jump.dataset.area;
+    if(collapsed.has(a)){ collapsed.delete(a); renderSched(); }
+    let el = document.querySelector(`.grouphdr[data-grp="${a}"]`);
+    if(!el && currentFilter !== "all"){
+      // section hidden by the current filter: reset to All so the click always lands
+      currentFilter = "all";
+      document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c.dataset.f==="all"));
+      renderSched();
+      el = document.querySelector(`.grouphdr[data-grp="${a}"]`);
     }
+    if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
     return;
   }
   const chip = e.target.closest(".chip");
