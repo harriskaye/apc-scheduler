@@ -613,7 +613,7 @@ function renderSched(){
       const s = status(r);
       const idx = ROLES.indexOf(r);
       html += `<div class="row ${s==="filled" ? (r.intern ? "rfilled rintern" : "rfilled") : ""}" data-role="${idx}" title="Click for role details">
-        <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":"miss"}">${s==="filled" ? r.who : "— unfilled —"}</span></div>
+        <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":"miss"}">${s==="filled" ? r.who : " "}</span></div>
         <div class="lane">`;
       for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
       if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
