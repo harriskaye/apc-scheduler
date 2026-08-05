@@ -31,7 +31,7 @@ body{
   color:var(--ink);
   line-height:1.5;
 }
-.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 20px 80px}
 h1,h2,h3{font-family:'Fraunces',Georgia,serif}
 
 /* ---------- header ---------- */
@@ -40,7 +40,7 @@ header.top{margin-bottom:8px}
   font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
   color:var(--apple);font-weight:700;margin-bottom:6px;
 }
-h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-spacing:-.01em}
+h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-spacing:-.01em}
 .srcline{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
 .pill{
   display:inline-flex;align-items:center;gap:6px;
@@ -61,26 +61,29 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 }
 .refresh:hover{border-color:var(--ink-soft)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
-.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .stat{
   background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:10px 16px;min-width:104px;
+  padding:7px 13px;min-width:88px;
 }
-.stat .num{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;line-height:1.1}
+.stat .num{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:700;line-height:1.1}
 .stat .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:600}
 .stat.open .num{color:var(--apple)}
 .stat.filled .num{color:var(--orchard)}
 .stat.pct .num{color:var(--intern)}
 
 /* ---------- day band ---------- */
-.dayband{margin:30px 0 8px}
-.dayband h2{font-size:1.05rem;font-weight:700;margin-bottom:10px}
+.dayband{margin:18px 0 4px}
+.dayband h2{font-size:.95rem;font-weight:700;margin-bottom:8px;cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:6px}
+.dayband h2 .chev{font-size:.75rem;color:var(--ink-soft);transition:transform .15s}
+.dayband.closed h2 .chev{transform:rotate(-90deg)}
+.dayband.closed .sky{display:none}
 .sky{
   position:relative;border-radius:14px;overflow:hidden;
   background:linear-gradient(90deg,
     #1b2340 0%, #33305c 8%, #6e4a6b 16%, #b5654f 24%,
     #e0954a 32%, #f2c14e 42%, #cfe0ea 60%, #bfd7ea 100%);
-  height:196px;
+  height:172px;
   box-shadow:inset 0 0 0 1px rgba(43,35,32,.12);
 }
 .sky .tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35)}
@@ -131,7 +134,9 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 .dempty{font-size:.75rem;color:var(--ink-soft);font-style:italic}
 
 /* ---------- filters ---------- */
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 14px;align-items:center}
+.controls{position:sticky;top:0;z-index:20;background:var(--paper);padding:10px 0 8px;margin:18px 0 10px;border-bottom:1px solid var(--line)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mini{margin-left:auto;font-size:.72rem;font-weight:700;color:var(--ink-soft);white-space:nowrap}
 .filters .lbl{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-right:4px}
 .chip{
   border:1px solid var(--line);background:var(--card);border-radius:999px;
@@ -143,7 +148,7 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 .chip:focus-visible{outline:3px solid var(--apple);outline-offset:1px}
 
 /* ---------- legend ---------- */
-.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.75rem;color:var(--ink-soft);margin-bottom:10px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.7rem;color:var(--ink-soft);margin-top:8px}
 .legend span{display:flex;align-items:center;gap:6px}
 .swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
 
@@ -159,9 +164,16 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 .timehead .axis span{position:absolute;top:6px;font-size:.65rem;font-weight:600;color:var(--ink-soft);transform:translateX(-50%)}
 .grouphdr{
   display:flex;align-items:center;gap:8px;
-  padding:10px 12px 6px;font-family:'Fraunces',serif;font-weight:700;font-size:.95rem;
+  padding:10px 12px;font-family:'Fraunces',serif;font-weight:700;font-size:.95rem;
   border-top:1px solid var(--line);background:#fdfbf8;
+  cursor:pointer;user-select:none;
 }
+.grouphdr:hover{background:#faf5ec}
+.grouphdr .chev{font-size:.7rem;color:var(--ink-soft);width:12px;flex:none;transition:transform .15s}
+.grouphdr.closed .chev{transform:rotate(-90deg)}
+.gprog{flex:0 0 80px;height:5px;border-radius:3px;background:#e9e1d5;overflow:hidden;margin-left:auto}
+.gprog i{display:block;height:100%;background:var(--orchard)}
+.gpct{font-family:'Public Sans',sans-serif;font-size:.68rem;font-weight:700;color:var(--orchard);min-width:34px;text-align:right;font-variant-numeric:tabular-nums;flex:none}
 .grouphdr .cnt{font-family:'Public Sans',sans-serif;font-size:.68rem;font-weight:600;color:var(--ink-soft)}
 .row{display:flex;min-height:34px;align-items:center;border-top:1px dashed #f0e9df}
 .row .rolecol{
@@ -181,7 +193,6 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 .bar:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
 .bar.filled{background:var(--orchard)}
 .bar.open{background:var(--apple-soft);color:var(--apple);border:1.5px dashed var(--apple)}
-.bar.tbd{background:var(--amber-soft);color:#8a5c06;border:1.5px dashed var(--amber)}
 .bar.intern.filled{background:var(--intern)}
 .bar.intern.open{background:var(--intern-soft);color:var(--intern);border:1.5px dashed var(--intern)}
 .bar.est{opacity:.85}
@@ -206,7 +217,6 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
   border-radius:999px;padding:5px 14px;font-size:.85rem;font-weight:700;
 }
 .detail .assignee.none{background:var(--apple-soft);color:var(--apple)}
-.detail .assignee.tbd{background:var(--amber-soft);color:#8a5c06}
 .detail .meta{font-size:.78rem;color:var(--ink-soft);margin-bottom:10px}
 .detail .notes{font-size:.85rem;white-space:pre-wrap;max-width:760px}
 @media (min-width:800px){
@@ -232,7 +242,7 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 </header>
 
 <section class="dayband" aria-label="Progression of the day">
-  <h2>How the day unfolds</h2>
+  <h2 id="bandToggle"><span class="chev">▾</span>How the day unfolds</h2>
   <div class="sky" id="sky"></div>
 </section>
 
@@ -247,6 +257,7 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 </section>
 
 <section aria-label="Full schedule">
+  <div class="controls">
   <div class="filters" id="filters" role="group" aria-label="Filter roles">
     <span class="lbl">Show</span>
     <button class="chip on" data-f="all">All roles</button>
@@ -254,13 +265,14 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
     <button class="chip" data-f="filled">Filled roles</button>
     <button class="chip" data-f="intern">Intern roles</button>
     <button class="chip" data-f="new">New for 2026</button>
+    <span class="mini" id="miniStat"></span>
   </div>
   <div class="legend">
     <span><i class="swatch" style="background:var(--orchard)"></i>Filled (adult)</span>
     <span><i class="swatch" style="background:var(--intern)"></i>Filled (intern)</span>
     <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open</span>
-    <span><i class="swatch" style="background:var(--amber-soft);border:1.5px dashed var(--amber)"></i>TBD</span>
     <span><i class="swatch" style="background:var(--apple)"></i>NEW = new role for 2026</span>
+  </div>
   </div>
   <div class="sched"><div class="sched-inner" id="sched"></div></div>
 </section>
@@ -285,7 +297,7 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
      Area (single select)           — must match an AREA_ORDER value below
      Start (single line text)       — 24h "H:MM", e.g. "7:30" or "13:00"
      End (single line text)         — 24h "H:MM"
-     Assigned To (single line text) — leave blank = open, "TBD" = TBD
+     Assigned To (single line text) — leave blank = open, a name = filled
      Intern (checkbox)
      New 2026 (checkbox)
      End Estimated (checkbox)
@@ -345,7 +357,7 @@ const SNAPSHOT = [
  ["Gazebo — Judging","Contest Scoring","9:00","10:45","Peter",0,0,1,"Equipment: laptop. Manages all formal scoring, winner designation, announcements. Briefs volunteer judges on rules, hands out clipboards, collects waivers, assigns pie categories. Reviews submitted rankings. Greenlights the gazebo team to mark winning pies. Runs to Music Tent for announcement, awards, photos, ceremony close."],
  ["Gazebo — Judging","Score Enterer 1 (Team 1)","9:00","10:45","",0,0,0,"Two-person teams: one reads scores aloud, one enters into the spreadsheet (laptop provided). Read, enter, double-check — bad handwriting makes mistakes easy."],
  ["Gazebo — Judging","Score Enterer 2 (Team 1)","9:00","10:45","",0,0,0,""],
- ["Gazebo — Judging","Score Enterer 3 (Team 2)","9:00","10:45","TBD",0,1,0,"Second entry team added for 2026."],
+ ["Gazebo — Judging","Score Enterer 3 (Team 2)","9:00","10:45","",0,1,0,"Second entry team added for 2026."],
  ["Gazebo — Judging","Score Enterer 4 (Team 2)","9:00","10:45","",0,1,0,""],
  ["Gazebo — Judging","Score Sheet Checker","9:00","10:45","",0,0,0,"Reviews every completed judge scoresheet: all assigned pies judged, scores legible and valid (no half scores), nothing missed. ~30 minutes of intense activity when all 14 judges finish at once. Needs serious detail orientation."],
  ["Gazebo — Judging","Pie Slicer for Judges 1","9:15","10:45","",0,0,0,"Gloves out and ready. Peter greenlights after decorative pies are viewed. Judging phase: cut and serve ONE slice per judge tasting."],
@@ -355,7 +367,7 @@ const SNAPSHOT = [
  ["Results & Announcement","MC Results","10:50","11:15","Peter",0,0,0,"Peter leads with his messaging."],
  ["Results & Announcement","MC Results","10:50","11:15","Yvonne L",0,0,0,""],
  ["Results & Announcement","MC Results","10:50","11:15","Shar",0,0,0,""],
- ["Pie Sales","Head of Slicing (Sales Phase)","10:45","11:15","TBD",0,0,0,"Slicing begins only after Peter confirms all 9 winners — judges then released. Winning pies stay at gazebo until moved to sales. Vendor slices held aside with thank-you notes. Keep sliced pies in their original row + category."],
+ ["Pie Sales","Head of Slicing (Sales Phase)","10:45","11:15","",0,0,0,"Slicing begins only after Peter confirms all 9 winners — judges then released. Winning pies stay at gazebo until moved to sales. Vendor slices held aside with thank-you notes. Keep sliced pies in their original row + category."],
  ["Pie Sales","Head of Sales","9:45","13:00","Sharon",0,0,0,"Pie Sales area. Coordinate interns for a smooth line, manage yellow jackets. Designate winning-pie location separate from numerical setting. Remind buyers to limit purchases so everyone gets a slice."],
  ["Pie Sales","Vendor Slice Distribution Lead","10:45","12:30","",0,1,1,"NEW FOR 2026 · Confirms vendor count morning-of, coordinates with slicers on quantity + timing, sets aside slices from non-winning pies BEFORE public sales, adds vendor thank-you stickers to clamshells, delivers to vendors after sales-floor transfer. Lot coordinators get slices too."],
  ["Pie Sales","Winning Pie Handling Lead","10:45","12:30","",0,1,1,"NEW FOR 2026 · Maintains custody of the 9 winning pies (3 categories × 1st/2nd/3rd). Slices, packages in order into clamshells, cleans tools between pies. Winning pies stay at gazebo until other slices are on the sales floor, then transported to a dedicated winners table. Enforces one winning-slice-per-customer limit."],
@@ -416,8 +428,7 @@ function fmt(h){
 }
 function status(role){
   const w = (role.who||"").trim();
-  if(w.toUpperCase()==="TBD") return "tbd";
-  return w ? "filled" : "open";
+  return (w && w.toUpperCase() !== "TBD") ? "filled" : "open";
 }
 
 /* ---------------- state ---------------- */
@@ -425,6 +436,8 @@ let ROLES = [];         // flat, normalized
 let currentFilter = "all";
 let dayofOn = false;
 let dayofTimer = null;
+let bandOpen = true;
+const collapsed = new Set();
 
 function normalizeSnapshot(){
   return SNAPSHOT.map((r,i)=>({
@@ -514,6 +527,8 @@ function renderStats(){
     <div class="stat open"><div class="num">${open}</div><div class="lbl">Still open</div></div>
     <div class="stat pct"><div class="num">${pc}%</div><div class="lbl">Staffed</div></div>
     <div class="stat"><div class="num">${newRoles}</div><div class="lbl">New for 2026</div></div>`;
+  const mini = document.getElementById("miniStat");
+  if(mini) mini.textContent = `${filled}/${total} filled \u00b7 ${pc}%`;
 }
 
 /* ---------------- sky band ---------------- */
@@ -528,7 +543,7 @@ function renderSky(){
     html += `<div class="tick ${h>=9?'late':''}" style="left:${pct(h)}%"><span>${fmt(h)}</span></div>`;
   }
   PHASES.forEach(p=>{
-    const top = 14 + (p.row||0)*46;
+    const top = 10 + (p.row||0)*44;
     const span = p.e - p.s;
     const timeStr = fmt(p.s) + "–" + fmt(p.e);
     // every bar spans its real duration; narrow ones drop the time text (hover/tap title has it)
@@ -575,20 +590,25 @@ function renderSched(){
     const roles = g.roles.filter(match);
     if(!roles.length) return;
     const openCt = roles.filter(r=>status(r)!=="filled").length;
-    html += `<div class="grouphdr" id="grp-${gi}" data-area="${g.name}">${g.name} <span class="cnt">${roles.length} role${roles.length>1?'s':''}${openCt? ' · '+openCt+' open':''}</span></div>`;
+    const filledPct = Math.round((roles.length-openCt)/roles.length*100);
+    const isClosed = collapsed.has(g.name);
+    html += `<div class="grouphdr ${isClosed?'closed':''}" data-grp="${g.name}" id="grp-${gi}" role="button" tabindex="0" aria-expanded="${!isClosed}"><span class="chev">▾</span>${g.name} <span class="cnt">${openCt ? openCt+' of '+roles.length+' open' : 'all '+roles.length+' filled'}</span><span class="gprog"><i style="width:${filledPct}%"></i></span><span class="gpct">${filledPct}%</span></div>`;
+    if(isClosed) return;
     roles.forEach(r=>{
       shown++;
       const s = status(r);
       const idx = ROLES.indexOf(r);
       html += `<div class="row">
-        <div class="rolecol">${r.role}<span class="name ${s==="filled"?"":"miss"}">${s==="filled" ? r.who : (s==="tbd" ? "TBD" : "— unfilled —")}</span></div>
+        <div class="rolecol">${r.role}<span class="name ${s==="filled"?"":"miss"}">${s==="filled" ? r.who : "— unfilled —"}</span></div>
         <div class="lane">`;
       for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
       if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
       const left = Math.max(pct(r.start), 0);
       const width = Math.max(pct(r.end)-pct(r.start), 3.5);
-      const label = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
-      html += `<button class="bar ${s} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role}">${label}${r.isnew?'<span class="newtag">NEW</span>':''}</button>`;
+      const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
+      const dur = r.end - r.start;
+      const label = dur >= 1.5 ? fullTimes : (dur >= 0.75 ? fmt(r.start) + (r.est ? " est." : "") : "");
+      html += `<button class="bar ${s} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${label}${r.isnew?'<span class="newtag">NEW</span>':''}</button>`;
       html += `</div></div>`;
     });
   });
@@ -601,7 +621,7 @@ function dName(r){
   const s = status(r);
   const who = s==="filled"
     ? `<span class="whotag">${r.who}</span>`
-    : `<span class="whotag miss">${s==="tbd"?"TBD":"unfilled"}</span>`;
+    : `<span class="whotag miss">unfilled</span>`;
   return `<div class="ditem"><b>${r.role}</b><span>${fmt(r.start)}–${fmt(r.end)} · ${r.area}</span><br>${who}</div>`;
 }
 function renderDayof(){
@@ -651,12 +671,24 @@ document.addEventListener("click", e=>{
     const s = status(r);
     document.getElementById("dTitle").textContent = r.role + (r.isnew ? "  ·  NEW 2026" : "");
     const who = document.getElementById("dWho");
-    who.className = "assignee " + (s==="filled" ? "" : s);
-    who.textContent = s==="filled" ? "👤 " + r.who : (s==="tbd" ? "⏳ TBD — needs confirmation" : "○ Unfilled — needs a volunteer");
+    who.className = "assignee " + (s==="filled" ? "" : "none");
+    who.textContent = s==="filled" ? "👤 " + r.who : "○ Unfilled — needs a volunteer";
     document.getElementById("dMeta").textContent =
       r.area + " · " + fmt(r.start) + "–" + fmt(r.end) + (r.est?" (end estimated)":"") + (r.intern ? " · Intern role" : "");
     document.getElementById("dNotes").textContent = r.notes || "No detailed description yet — add one in the Notes field in Airtable.";
     detail.classList.add("openp");
+    return;
+  }
+  const ghdr = e.target.closest(".grouphdr");
+  if(ghdr){
+    const a = ghdr.dataset.grp;
+    if(collapsed.has(a)) collapsed.delete(a); else collapsed.add(a);
+    renderSched();
+    return;
+  }
+  if(e.target.closest("#bandToggle")){
+    bandOpen = !bandOpen;
+    document.querySelector(".dayband").classList.toggle("closed", !bandOpen);
     return;
   }
   const jump = e.target.closest("[data-jump]");
@@ -665,6 +697,7 @@ document.addEventListener("click", e=>{
     const groups = groupRoles();
     for(let gi=0; gi<groups.length; gi++){
       if(groups[gi].roles.some(r=>match(r) && r.start<en && r.end>s)){
+        if(collapsed.has(groups[gi].name)){ collapsed.delete(groups[gi].name); renderSched(); }
         const el = document.getElementById("grp-"+gi);
         if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
         break;
@@ -688,6 +721,9 @@ document.addEventListener("click", e=>{
 });
 document.addEventListener("keydown", e=>{
   if(e.key==="Escape") detail.classList.remove("openp");
+  if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("grouphdr")){
+    e.preventDefault(); e.target.click();
+  }
 });
 
 load().then(()=>{ if(dayofOn) renderDayof(); });
