@@ -2,7 +2,7 @@
 // Instantly assigns a volunteer to an open role: writes their name into the
 // FIRST open row matching the role, only if Assigned To is empty. Verifies the
 // write to handle two people racing for the same slot. Logs to Signups table.
-
+ 
 const BASE_ID = "appULR9ueveTBZjAI";
 const ROLES_TABLE = "tblA5UXs2v0Q3GDPV";
 const SIGNUPS_TABLE = "tblDrBVb3zleqYOIl";
