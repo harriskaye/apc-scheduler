@@ -189,8 +189,13 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .bar.pend{background:var(--amber-soft);color:#8a5c06;border:1.5px dashed var(--amber)}
 .stat.pend .num{color:var(--amber)}
 .detail .assignee.pend{background:var(--amber-soft);color:#8a5c06}
-.reqbtn{display:none;background:var(--apple);color:#fff;font-weight:700;border-radius:8px;padding:10px 18px;font-size:.92rem;text-decoration:none;margin:2px 0 12px}
-.reqbtn:hover{background:#9c2218}
+.signupbox{display:none;margin:4px 0 14px;padding:12px;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.signupbox input{display:block;width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:.92rem;font-family:inherit;margin-bottom:8px;background:var(--card)}
+.signupbox input:focus{outline:2px solid var(--ink);border-color:var(--ink)}
+.signupbox button{background:var(--apple);color:#fff;font-weight:700;border:none;border-radius:8px;padding:10px 18px;font-size:.92rem;cursor:pointer;font-family:inherit}
+.signupbox button:hover{background:#9c2218}
+.signupbox button:disabled{opacity:.6;cursor:default}
+.sumsg{font-size:.85rem;font-weight:600;margin-top:8px;color:var(--ink)}
 .notedot{color:var(--ink-soft);font-size:.7rem;margin-left:5px;opacity:.7}
 .row .rolecol{
   width:250px;flex:none;padding:6px 12px;font-size:.86rem;font-weight:600;
@@ -289,11 +294,10 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
     <span class="mini" id="miniStat"></span>
   </div>
   <div class="legend">
-    <span><i class="swatch" style="background:var(--orchard)"></i>Filled (adult)</span>
-    <span><i class="swatch" style="background:var(--intern)"></i>Filled (intern)</span>
-    <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open</span>
-    <span><i class="swatch" style="background:var(--amber-soft);border:1.5px dashed var(--amber)"></i>Requested — pending</span>
-    <span><i class="swatch" style="background:var(--apple)"></i>NEW = new role for 2026</span>
+    <span><i class="swatch" style="background:var(--orchard)"></i>Filled</span>
+    <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open — click to sign up</span>
+    <span><i class="swatch" style="background:var(--intern)"></i>Intern shift — assigned by the market</span>
+    <span><i class="swatch" style="background:var(--apple)"></i>NEW role for 2026</span>
   </div>
   </div>
   <div class="sched"><div class="sched-inner" id="sched"></div></div>
@@ -307,7 +311,12 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   <h3 id="dTitle"></h3>
   <div><span class="assignee" id="dWho"></span></div>
   <div class="meta" id="dMeta"></div>
-  <a class="reqbtn" id="dRequest" target="_blank" rel="noopener">👋 Sign up for this role</a>
+  <div class="signupbox" id="signupBox">
+    <input type="text" id="suName" placeholder="Your name" maxlength="80" autocomplete="name">
+    <input type="text" id="suNote" placeholder="Note (optional)" maxlength="200">
+    <button id="suGo">👋 Sign up for this role</button>
+    <div class="sumsg" id="suMsg"></div>
+  </div>
   <div class="notes" id="dNotes"></div>
 </div>
 
@@ -341,7 +350,6 @@ const AIRTABLE = {
   token:   "",       // never in this file; lives in a Vercel environment variable
   apiUrl:  "/api/roles"
 };
-const SIGNUP_FORM_URL = "https://airtable.com/appULR9ueveTBZjAI/pagYBCabMvIbddj91/form";
 
 const AREA_ORDER = [
   "Pre-Market Operations",
@@ -701,6 +709,42 @@ function toggleDayof(){
   }
 }
 
+/* ---------------- instant signup ---------------- */
+async function doSignup(){
+  const box = document.getElementById("signupBox");
+  const name = document.getElementById("suName").value.trim();
+  const note = document.getElementById("suNote").value.trim();
+  const msg = document.getElementById("suMsg");
+  const go = document.getElementById("suGo");
+  if(!name){ msg.textContent = "Please enter your name first."; return; }
+  go.disabled = true; go.textContent = "Signing you up…";
+  try{
+    const res = await fetch("/api/signup", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({role: box.dataset.role, name, note})
+    });
+    const data = await res.json();
+    if(data.ok){
+      msg.textContent = "🎉 You're in, " + name + "! Updating the schedule…";
+      await load();
+      setTimeout(()=>{
+        detail.classList.remove("openp");
+        document.getElementById("backdrop").classList.remove("on");
+      }, 900);
+    } else if(data.reason === "taken"){
+      msg.textContent = "Sorry — someone just grabbed this one! Pick another open role.";
+      go.disabled = false; go.textContent = "👋 Sign up for this role";
+      await load();
+    } else {
+      throw new Error(data.reason || "unknown");
+    }
+  }catch(err){
+    msg.textContent = "Couldn't sign up right now — try again, or email Harris.";
+    go.disabled = false; go.textContent = "👋 Sign up for this role";
+  }
+}
+
 /* ---------------- interactions ---------------- */
 const detail = document.getElementById("detail");
 document.addEventListener("click", e=>{
@@ -714,13 +758,19 @@ document.addEventListener("click", e=>{
     who.className = "assignee " + (s==="filled" ? "" : (r.pending ? "pend" : "none"));
     who.textContent = s==="filled" ? "👤 " + r.who
       : (r.pending ? "⏳ Requested by " + r.pending + " — pending confirmation"
-                   : "○ Unfilled — needs a volunteer");
-    const btn = document.getElementById("dRequest");
-    if(s==="open" && !r.pending){
-      btn.style.display = "inline-block";
-      btn.href = SIGNUP_FORM_URL + "?prefill_Role=" + encodeURIComponent(r.role);
+                   : (r.intern ? "🎓 Intern shift — assigned by the market team"
+                               : "○ Unfilled — needs a volunteer"));
+    const box = document.getElementById("signupBox");
+    if(s==="open" && !r.pending && !r.intern){
+      box.style.display = "block";
+      box.dataset.role = r.role;
+      document.getElementById("suName").value = "";
+      document.getElementById("suNote").value = "";
+      document.getElementById("suMsg").textContent = "";
+      document.getElementById("suGo").disabled = false;
+      document.getElementById("suGo").textContent = "👋 Sign up for this role";
     } else {
-      btn.style.display = "none";
+      box.style.display = "none";
     }
     document.getElementById("dMeta").textContent =
       r.area + " · " + fmt(r.start) + "–" + fmt(r.end) + (r.est?" (end estimated)":"") + (r.intern ? " · Intern role" : "");
@@ -764,6 +814,7 @@ document.addEventListener("click", e=>{
     renderSched();
     return;
   }
+  if(e.target.id==="suGo"){ doSignup(); return; }
   if(e.target.id==="refreshBtn"){ load(); return; }
   if(e.target.id==="dayofBtn"){ toggleDayof(); return; }
   if(e.target.id==="detailClose" || (!e.target.closest(".detail") && detail.classList.contains("openp"))){
@@ -773,6 +824,7 @@ document.addEventListener("click", e=>{
 });
 document.addEventListener("keydown", e=>{
   if(e.key==="Escape"){ detail.classList.remove("openp"); document.getElementById("backdrop").classList.remove("on"); }
+  if(e.key==="Enter" && (e.target.id==="suName" || e.target.id==="suNote")) doSignup();
   if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("grouphdr")){
     e.preventDefault(); e.target.click();
   }
