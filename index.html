@@ -173,6 +173,10 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .grouphdr.closed .chev{transform:rotate(-90deg)}
 .gprog{flex:0 0 80px;height:5px;border-radius:3px;background:#e9e1d5;overflow:hidden;margin-left:auto}
 .gprog i{display:block;height:100%;background:var(--orchard)}
+.grouphdr{scroll-margin-top:118px}
+.timelabel{position:absolute;top:9px;font-size:.62rem;font-weight:700;color:var(--ink-soft);white-space:nowrap;pointer-events:none;z-index:1}
+.timelabel.flip{transform:translateX(-100%)}
+.rolecol .newtag{background:var(--apple);color:#fff;border-radius:3px;font-size:.55rem;font-weight:700;padding:1px 4px;margin-left:6px;display:inline-block;vertical-align:1px}
 .gpct{font-family:'Public Sans',sans-serif;font-size:.68rem;font-weight:700;color:var(--orchard);min-width:34px;text-align:right;font-variant-numeric:tabular-nums;flex:none}
 .grouphdr .cnt{font-family:'Public Sans',sans-serif;font-size:.68rem;font-weight:600;color:var(--ink-soft)}
 .row{display:flex;min-height:34px;align-items:center;border-top:1px dashed #f0e9df}
@@ -548,7 +552,7 @@ function renderSky(){
     const timeStr = fmt(p.s) + "–" + fmt(p.e);
     // every bar spans its real duration; narrow ones drop the time text (hover/tap title has it)
     const short = span < 2.2;
-    const label = short ? p.name : `${p.name}<small>${timeStr}</small>`;
+    const label = p.name; // times live on the axis below and in the tooltip
     html += `<button class="phase ${short?'short':''}" style="left:${pct(p.s)}%;width:${pct(p.e)-pct(p.s)}%;top:${top}px" data-jump="1" data-s="${p.s}" data-e="${p.e}" title="${p.name} · ${timeStr}">${label}</button>`;
   });
   const nh = nowHours();
@@ -599,7 +603,7 @@ function renderSched(){
       const s = status(r);
       const idx = ROLES.indexOf(r);
       html += `<div class="row">
-        <div class="rolecol">${r.role}<span class="name ${s==="filled"?"":"miss"}">${s==="filled" ? r.who : "— unfilled —"}</span></div>
+        <div class="rolecol">${r.role}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":"miss"}">${s==="filled" ? r.who : "— unfilled —"}</span></div>
         <div class="lane">`;
       for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
       if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
@@ -607,8 +611,14 @@ function renderSched(){
       const width = Math.max(pct(r.end)-pct(r.start), 3.5);
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
       const dur = r.end - r.start;
-      const label = dur >= 1.5 ? fullTimes : (dur >= 0.75 ? fmt(r.start) + (r.est ? " est." : "") : "");
-      html += `<button class="bar ${s} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${label}${r.isnew?'<span class="newtag">NEW</span>':''}</button>`;
+      const inside = dur >= 1.75; // enough room to print the range inside the bar
+      html += `<button class="bar ${s} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${inside ? fullTimes : ''}</button>`;
+      if(!inside){
+        const flip = r.end > 12.5; // near the right edge: print the label to the left of the bar instead
+        html += flip
+          ? `<span class="timelabel flip" style="left:calc(${left}% - 6px)">${fullTimes}</span>`
+          : `<span class="timelabel" style="left:calc(${left + width}% + 6px)">${fullTimes}</span>`;
+      }
       html += `</div></div>`;
     });
   });
