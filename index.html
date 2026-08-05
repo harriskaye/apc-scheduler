@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apple Pie Contest 2026 — Live Volunteer Scheduler</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#2b2320;
+  --ink-soft:#6b5f57;
+  --paper:#faf7f2;
+  --card:#ffffff;
+  --line:#e7ded3;
+  --apple:#b3271e;
+  --apple-soft:#fbeae8;
+  --orchard:#4a6b3a;
+  --orchard-soft:#ecf2e6;
+  --amber:#c07d0a;
+  --amber-soft:#fdf3df;
+  --intern:#3d5a80;
+  --intern-soft:#e8eef5;
+  --radius:10px;
+  font-size:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Public Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.5;
+}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 20px 80px}
+h1,h2,h3{font-family:'Fraunces',Georgia,serif}
+
+/* ---------- header ---------- */
+header.top{margin-bottom:8px}
+.eyebrow{
+  font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--apple);font-weight:700;margin-bottom:6px;
+}
+h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-spacing:-.01em}
+.srcline{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:.72rem;font-weight:700;border-radius:999px;padding:4px 12px;
+}
+.pill .dot{width:8px;height:8px;border-radius:50%}
+.pill.live{background:var(--orchard-soft);color:var(--orchard)}
+.pill.live .dot{background:var(--orchard);animation:pulse 2s infinite}
+.pill.snap{background:var(--amber-soft);color:#8a5c06}
+.pill.snap .dot{background:var(--amber)}
+.pill.err{background:var(--apple-soft);color:var(--apple)}
+.pill.err .dot{background:var(--apple)}
+.srcline .when{font-size:.72rem;color:var(--ink-soft)}
+.refresh{
+  border:1px solid var(--line);background:var(--card);border-radius:999px;
+  padding:4px 12px;font-size:.72rem;font-weight:700;cursor:pointer;color:var(--ink-soft);
+  font-family:inherit;
+}
+.refresh:hover{border-color:var(--ink-soft)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.stat{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:10px 16px;min-width:104px;
+}
+.stat .num{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:700;line-height:1.1}
+.stat .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);font-weight:600}
+.stat.open .num{color:var(--apple)}
+.stat.filled .num{color:var(--orchard)}
+.stat.pct .num{color:var(--intern)}
+
+/* ---------- day band ---------- */
+.dayband{margin:30px 0 8px}
+.dayband h2{font-size:1.05rem;font-weight:700;margin-bottom:10px}
+.sky{
+  position:relative;border-radius:14px;overflow:hidden;
+  background:linear-gradient(90deg,
+    #1b2340 0%, #33305c 8%, #6e4a6b 16%, #b5654f 24%,
+    #e0954a 32%, #f2c14e 42%, #cfe0ea 60%, #bfd7ea 100%);
+  height:196px;
+  box-shadow:inset 0 0 0 1px rgba(43,35,32,.12);
+}
+.sky .tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35)}
+.sky .tick span{
+  position:absolute;bottom:6px;left:4px;font-size:.62rem;font-weight:600;
+  color:rgba(255,255,255,.9);text-shadow:0 1px 2px rgba(0,0,0,.35);white-space:nowrap;
+}
+.sky .tick.late span{color:rgba(43,35,32,.75);text-shadow:none}
+.phase{
+  position:absolute;height:34px;border-radius:7px;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(43,35,32,.18);
+  display:flex;align-items:center;padding:0 10px;
+  font-size:.72rem;font-weight:700;letter-spacing:.02em;
+  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:transform .12s ease, box-shadow .12s ease;
+  font-family:inherit;
+}
+.phase:hover,.phase:focus-visible{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.18);outline:none}
+.phase:focus-visible{box-shadow:0 0 0 3px var(--apple)}
+.phase small{font-weight:500;color:var(--ink-soft);margin-left:6px}
+.phase.short{justify-content:center;padding:0 3px;overflow:visible;text-overflow:clip}
+.bandnote{font-size:.78rem;color:var(--ink-soft);margin-top:8px}
+.nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--apple);z-index:2}
+.nowline::after{
+  content:"NOW";position:absolute;top:2px;left:4px;
+  background:var(--apple);color:#fff;font-size:.55rem;font-weight:800;
+  letter-spacing:.06em;border-radius:3px;padding:1px 5px;
+}
+.lane .nowline{width:1.5px;z-index:1}
+.lane .nowline::after{display:none}
+
+/* ---------- day-of view ---------- */
+.dayof{display:none;margin:22px 0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.dayof.on{display:block}
+.dayof h2{font-size:1.05rem;margin-bottom:2px}
+.dayof .clock{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;margin:4px 0 12px}
+.dayof .clock small{font-family:'Public Sans',sans-serif;font-size:.75rem;font-weight:600;color:var(--ink-soft);margin-left:8px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.dcol h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;font-family:'Public Sans',sans-serif;font-weight:700;color:var(--ink-soft);margin-bottom:8px}
+.dcol h3.now{color:var(--orchard)}
+.dcol h3.next{color:var(--amber)}
+.dcol h3.wrap{color:var(--apple)}
+.ditem{border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-bottom:6px;font-size:.78rem;line-height:1.35}
+.ditem b{display:block;font-weight:700}
+.ditem span{color:var(--ink-soft)}
+.ditem .whotag{color:var(--orchard);font-weight:700}
+.ditem .whotag.miss{color:var(--apple)}
+.dempty{font-size:.75rem;color:var(--ink-soft);font-style:italic}
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:26px 0 14px;align-items:center}
+.filters .lbl{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-soft);margin-right:4px}
+.chip{
+  border:1px solid var(--line);background:var(--card);border-radius:999px;
+  padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer;
+  color:var(--ink-soft);font-family:inherit;
+}
+.chip:hover{border-color:var(--ink-soft)}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip:focus-visible{outline:3px solid var(--apple);outline-offset:1px}
+
+/* ---------- legend ---------- */
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.75rem;color:var(--ink-soft);margin-bottom:10px}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:12px;height:12px;border-radius:3px;display:inline-block}
+
+/* ---------- schedule ---------- */
+.sched{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto}
+.sched-inner{min-width:860px;position:relative}
+.timehead{
+  position:sticky;top:0;display:flex;height:30px;border-bottom:1px solid var(--line);
+  background:var(--card);z-index:3;
+}
+.timehead .rolecol{width:230px;flex:none;border-right:1px solid var(--line)}
+.timehead .axis{position:relative;flex:1}
+.timehead .axis span{position:absolute;top:6px;font-size:.65rem;font-weight:600;color:var(--ink-soft);transform:translateX(-50%)}
+.grouphdr{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 12px 6px;font-family:'Fraunces',serif;font-weight:700;font-size:.95rem;
+  border-top:1px solid var(--line);background:#fdfbf8;
+}
+.grouphdr .cnt{font-family:'Public Sans',sans-serif;font-size:.68rem;font-weight:600;color:var(--ink-soft)}
+.row{display:flex;min-height:34px;align-items:center;border-top:1px dashed #f0e9df}
+.row .rolecol{
+  width:230px;flex:none;padding:5px 12px;font-size:.76rem;font-weight:600;
+  border-right:1px solid var(--line);line-height:1.25;
+}
+.row .rolecol .name{display:block;font-weight:700;font-size:.72rem;color:var(--ink)}
+.row .rolecol .name.miss{font-weight:400;color:var(--ink-soft)}
+.row .lane{position:relative;flex:1;height:34px}
+.bar{
+  position:absolute;top:7px;height:20px;border-radius:5px;
+  font-size:.64rem;font-weight:700;color:#fff;
+  display:flex;align-items:center;padding:0 7px;
+  white-space:nowrap;overflow:hidden;cursor:pointer;
+  border:none;font-family:inherit;
+}
+.bar:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+.bar.filled{background:var(--orchard)}
+.bar.open{background:var(--apple-soft);color:var(--apple);border:1.5px dashed var(--apple)}
+.bar.tbd{background:var(--amber-soft);color:#8a5c06;border:1.5px dashed var(--amber)}
+.bar.intern.filled{background:var(--intern)}
+.bar.intern.open{background:var(--intern-soft);color:var(--intern);border:1.5px dashed var(--intern)}
+.bar.est{opacity:.85}
+.bar .newtag{background:var(--apple);color:#fff;border-radius:3px;font-size:.55rem;padding:1px 4px;margin-left:5px;flex:none}
+.gridline{position:absolute;top:0;bottom:0;width:1px;background:#f3ede4;z-index:0}
+.gridline.hour{background:#e9e1d5}
+.emptystate{padding:30px;text-align:center;color:var(--ink-soft);font-size:.85rem}
+
+/* ---------- detail panel ---------- */
+.detail{
+  position:fixed;inset:auto 0 0 0;background:var(--card);
+  border-top:2px solid var(--ink);box-shadow:0 -8px 30px rgba(0,0,0,.15);
+  padding:18px 20px 24px;transform:translateY(105%);transition:transform .2s ease;
+  z-index:50;max-height:60vh;overflow-y:auto;
+}
+.detail.openp{transform:translateY(0)}
+.detail .close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-soft);font-family:inherit}
+.detail h3{font-size:1.1rem;margin-bottom:2px;padding-right:30px}
+.detail .assignee{
+  display:inline-flex;align-items:center;gap:8px;margin:8px 0 10px;
+  background:var(--orchard-soft);color:var(--orchard);
+  border-radius:999px;padding:5px 14px;font-size:.85rem;font-weight:700;
+}
+.detail .assignee.none{background:var(--apple-soft);color:var(--apple)}
+.detail .assignee.tbd{background:var(--amber-soft);color:#8a5c06}
+.detail .meta{font-size:.78rem;color:var(--ink-soft);margin-bottom:10px}
+.detail .notes{font-size:.85rem;white-space:pre-wrap;max-width:760px}
+@media (min-width:800px){
+  .detail{left:auto;right:20px;bottom:20px;width:440px;border:1px solid var(--line);border-top:2px solid var(--ink);border-radius:12px}
+}
+
+footer{margin-top:40px;font-size:.72rem;color:var(--ink-soft)}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div class="eyebrow">Pleasantville Farmers Market</div>
+  <h1>Apple Pie Contest 2026<br>Volunteer Scheduler</h1>
+  <div class="srcline">
+    <span class="pill snap" id="srcPill"><span class="dot"></span><span id="srcText">Loading…</span></span>
+    <span class="when" id="srcWhen"></span>
+    <button class="refresh" id="refreshBtn">↻ Refresh</button>
+    <button class="refresh" id="dayofBtn">☀ Day-of view</button>
+  </div>
+  <div class="stats" id="stats"></div>
+</header>
+
+<section class="dayband" aria-label="Progression of the day">
+  <h2>How the day unfolds</h2>
+  <div class="sky" id="sky"></div>
+  <p class="bandnote">Managers arrive in the dark at 4:30, pies arrive at sunrise, judging happens in full morning light. Click a phase to jump to its roles.</p>
+</section>
+
+<section class="dayof" id="dayof" aria-label="Day-of master view">
+  <h2>Contest day, right now</h2>
+  <div class="clock" id="dClock"></div>
+  <div class="dgrid">
+    <div class="dcol"><h3 class="next">Arriving next (60 min)</h3><div id="dNext"></div></div>
+    <div class="dcol"><h3 class="now">Happening now</h3><div id="dNow"></div></div>
+    <div class="dcol"><h3 class="wrap">Wrapping up (30 min)</h3><div id="dWrap"></div></div>
+  </div>
+</section>
+
+<section aria-label="Full schedule">
+  <div class="filters" id="filters" role="group" aria-label="Filter roles">
+    <span class="lbl">Show</span>
+    <button class="chip on" data-f="all">All roles</button>
+    <button class="chip" data-f="open">Open roles</button>
+    <button class="chip" data-f="filled">Filled roles</button>
+    <button class="chip" data-f="intern">Intern roles</button>
+    <button class="chip" data-f="new">New for 2026</button>
+  </div>
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--orchard)"></i>Filled (adult)</span>
+    <span><i class="swatch" style="background:var(--intern)"></i>Filled (intern)</span>
+    <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open</span>
+    <span><i class="swatch" style="background:var(--amber-soft);border:1.5px dashed var(--amber)"></i>TBD</span>
+    <span><i class="swatch" style="background:var(--apple)"></i>NEW = new role for 2026</span>
+  </div>
+  <div class="sched"><div class="sched-inner" id="sched"></div></div>
+</section>
+
+<footer>Live data via Airtable · Falls back to the built-in snapshot if the connection fails · Pleasantville Farmers Market</footer>
+</div>
+
+<div class="detail" id="detail" role="dialog" aria-modal="false" aria-label="Role details">
+  <button class="close" id="detailClose" aria-label="Close details">×</button>
+  <h3 id="dTitle"></h3>
+  <div><span class="assignee" id="dWho"></span></div>
+  <div class="meta" id="dMeta"></div>
+  <div class="notes" id="dNotes"></div>
+</div>
+
+<script>
+/* =====================================================================
+   AIRTABLE CONFIG — fill these in once your base is set up.
+   Leave AIRTABLE.enabled = false to run purely on the built-in snapshot.
+
+   Table fields expected (see the seed CSV that ships with this file):
+     Role (single line text)         — role title
+     Area (single select)           — must match an AREA_ORDER value below
+     Start (single line text)       — 24h "H:MM", e.g. "7:30" or "13:00"
+     End (single line text)         — 24h "H:MM"
+     Assigned To (single line text) — leave blank = open, "TBD" = TBD
+     Intern (checkbox)
+     New 2026 (checkbox)
+     End Estimated (checkbox)
+     Notes (long text)
+     Sort (number)                  — display order within the area
+
+   SECURITY NOTE: a token pasted here is visible to anyone who views
+   source on this page. Use a Personal Access Token scoped to
+   *read-only* (data.records:read) on *this one base* — or better,
+   point apiUrl at a small Vercel serverless proxy that holds the
+   token server-side (same pattern as the inspection map).
+   ===================================================================== */
+const AIRTABLE = {
+  enabled: false,                 // ← flip to true when configured
+  baseId:  "appXXXXXXXXXXXXXX",   // from airtable.com/api
+  table:   "APC Roles 2026",
+  token:   "patXXXXXXXXXXXXXX",   // read-only PAT (or leave "" if using a proxy)
+  apiUrl:  ""                     // optional: e.g. "/api/apc-roles" on Vercel — if set, token is ignored
+};
+
+const AREA_ORDER = [
+  "Pre-Market Operations",
+  "Pre-Event Prep",
+  "Sign-In Table",
+  "Gazebo — Judging",
+  "Results & Announcement",
+  "Pie Sales",
+  "Market Support",
+  "End of Day"
+];
+
+const DAY_START = 4.5, DAY_END = 13.5;
+
+/* ---------------- built-in snapshot (from the 2026 xlsx) ---------------- */
+/* Same shape the Airtable loader produces, so rendering is identical.     */
+const SNAPSHOT = [
+ // area, role, start, end, who, intern, isnew, est, notes
+ ["Pre-Market Operations","Gazebo Set-up","5:30","6:10","Harris",0,0,1,""],
+ ["Pre-Market Operations","DPW","6:10","7:15","DPW",0,0,1,"Cones, garbage cans, table drop, music area set-up."],
+ ["Pre-Market Operations","Morning Ops (Intern)","7:15","9:30","",1,0,0,"After normal tasks, assist with pie tasks if needed."],
+ ["Pre-Market Operations","Morning Ops (Intern)","7:15","9:30","",1,0,0,""],
+ ["Pre-Market Operations","Morning Ops (Intern)","7:15","9:30","",1,0,0,""],
+ ["Pre-Event Prep","Pre-Event Supervision & Prep — Pie Check-in","7:30","8:00","Shar",0,0,0,"Pie check-in area setup: 3 wrought-iron tables for pie drop-off, 2 behind for work area, tablecloths, 40 × $10 market bucks for bakers, cash box, pie plate number reminders, number stickers (4 of each), blue tape backup, free slice coupons (2 per baker), signage, paper towels, hot pads, wet wipes. Hands off into Head of Sign-In at 8:00."],
+ ["Pre-Event Prep","Pre-Event Supervision & Prep — Gazebo","7:30","8:15","Yvonne L",0,0,0,"Gazebo: place judge tasting supplies (forks, plates, napkins); garbage bin easily accessible; keep traffic flow clear at peak judge time. Hands off into Head of Gazebo at 8:15."],
+ ["Pre-Event Prep","Prize Collection","7:30","9:30","Sharon",0,0,0,""],
+ ["Pre-Event Prep","Prize Collection","7:30","9:30","Joe",0,0,0,""],
+ ["Pre-Event Prep","Prize Bag Packer","7:30","9:30","Marlene",0,0,0,""],
+ ["Pre-Event Prep","Photographer","8:15","12:00","",0,0,0,"Have extra copies of shoot list to provide."],
+ ["Sign-In Table","Head of Sign-In","8:00","10:00","Shar",0,0,1,"Owns all aspects of sign-in tent. Briefs helpers ahead of contest day. Brings printed reports (registration, pending payment, last-minute changes, coupons). Communicates pie/category ID changes to gazebo team so pies land in the right judging station. After last check-in, hands the pie-plate number + baker bio list to the Pie Plate Pick-up table."],
+ ["Sign-In Table","Sign-In Coord. 1 — Traditional","7:45","9:45","",0,0,0,"Traditional pie check-in. Verify: no decorations beyond air vents (designs move to Decorative); 9–10\" pie plate; display-ready, no containers/lids. Label plate bottom, rim, and baker reminder slip — lowest number first. Give: $10 MB, number reminder, 2 free slice coupons, day schedule. After check-in, pack supplies into bins; leave tables (they become pie plate pick-up)."],
+ ["Sign-In Table","Sign-In Coord. 2 — Decorative","7:45","9:45","",0,0,0,"Decorative pie check-in. Verify 9–10\" plate; display-ready. Same labeling and hand-outs as Traditional."],
+ ["Sign-In Table","Sign-In Coord. 3 — Apple Crisp","7:45","9:45","",0,0,0,"Apple crisp check-in. Verify: streusel topping, no bottom crust; 9–10\" plate; display-ready. Same labeling and hand-outs."],
+ ["Gazebo — Judging","Head of Gazebo","8:15","10:45","Yvonne L",0,0,0,"Owns pie transport from sign-in to gazebo placement. Every pie must display its ID sticker. Covers pies with mesh (bees), removes when Peter greenlights judging. During judging: collect garbage, replenish forks, keep area presentable, stay out of judges' paths. Heads to Music Tent for closing ceremony once winners are set."],
+ ["Gazebo — Judging","Asst. Head of Gazebo #1","8:15","11:00","",0,0,0,""],
+ ["Gazebo — Judging","Asst. Head of Gazebo #2","8:15","11:00","",0,0,0,""],
+ ["Gazebo — Judging","Judge Greeter","9:00","10:00","",0,1,1,"NEW FOR 2026 · Music Tent area. Supplies: judge list, pens, clipboard, coffee coupons, judge swag bags, judge schedule notes. Greets judges, hands out thank-you swag bag + coffee coupon, shows them their IDs, quick market tour if time allows."],
+ ["Gazebo — Judging","Contest Scoring","9:00","10:45","Peter",0,0,1,"Equipment: laptop. Manages all formal scoring, winner designation, announcements. Briefs volunteer judges on rules, hands out clipboards, collects waivers, assigns pie categories. Reviews submitted rankings. Greenlights the gazebo team to mark winning pies. Runs to Music Tent for announcement, awards, photos, ceremony close."],
+ ["Gazebo — Judging","Score Enterer 1 (Team 1)","9:00","10:45","",0,0,0,"Two-person teams: one reads scores aloud, one enters into the spreadsheet (laptop provided). Read, enter, double-check — bad handwriting makes mistakes easy."],
+ ["Gazebo — Judging","Score Enterer 2 (Team 1)","9:00","10:45","",0,0,0,""],
+ ["Gazebo — Judging","Score Enterer 3 (Team 2)","9:00","10:45","TBD",0,1,0,"Second entry team added for 2026."],
+ ["Gazebo — Judging","Score Enterer 4 (Team 2)","9:00","10:45","",0,1,0,""],
+ ["Gazebo — Judging","Score Sheet Checker","9:00","10:45","",0,0,0,"Reviews every completed judge scoresheet: all assigned pies judged, scores legible and valid (no half scores), nothing missed. ~30 minutes of intense activity when all 14 judges finish at once. Needs serious detail orientation."],
+ ["Gazebo — Judging","Pie Slicer for Judges 1","9:15","10:45","",0,0,0,"Gloves out and ready. Peter greenlights after decorative pies are viewed. Judging phase: cut and serve ONE slice per judge tasting."],
+ ["Gazebo — Judging","Pie Slicer for Judges 2","9:15","10:45","",0,0,0,""],
+ ["Gazebo — Judging","Pie Slicer for Judges 3","9:15","10:45","",0,0,0,""],
+ ["Results & Announcement","Tabulator","10:20","10:45","Peter",0,0,0,"Texts Harris the sheets so he has info for post-event."],
+ ["Results & Announcement","MC Results","10:50","11:15","Peter",0,0,0,"Peter leads with his messaging."],
+ ["Results & Announcement","MC Results","10:50","11:15","Yvonne L",0,0,0,""],
+ ["Results & Announcement","MC Results","10:50","11:15","Shar",0,0,0,""],
+ ["Pie Sales","Head of Slicing (Sales Phase)","10:45","11:15","TBD",0,0,0,"Slicing begins only after Peter confirms all 9 winners — judges then released. Winning pies stay at gazebo until moved to sales. Vendor slices held aside with thank-you notes. Keep sliced pies in their original row + category."],
+ ["Pie Sales","Head of Sales","9:45","13:00","Sharon",0,0,0,"Pie Sales area. Coordinate interns for a smooth line, manage yellow jackets. Designate winning-pie location separate from numerical setting. Remind buyers to limit purchases so everyone gets a slice."],
+ ["Pie Sales","Vendor Slice Distribution Lead","10:45","12:30","",0,1,1,"NEW FOR 2026 · Confirms vendor count morning-of, coordinates with slicers on quantity + timing, sets aside slices from non-winning pies BEFORE public sales, adds vendor thank-you stickers to clamshells, delivers to vendors after sales-floor transfer. Lot coordinators get slices too."],
+ ["Pie Sales","Winning Pie Handling Lead","10:45","12:30","",0,1,1,"NEW FOR 2026 · Maintains custody of the 9 winning pies (3 categories × 1st/2nd/3rd). Slices, packages in order into clamshells, cleans tools between pies. Winning pies stay at gazebo until other slices are on the sales floor, then transported to a dedicated winners table. Enforces one winning-slice-per-customer limit."],
+ ["Pie Sales","Pie Transporter + Plating/Sales/Clean-up 1 (Intern)","10:00","13:00","",1,0,0,""],
+ ["Pie Sales","Pie Transporter + Plating/Sales/Clean-up 2 (Intern)","10:00","13:00","",1,0,0,""],
+ ["Pie Sales","Pie Transporter + Plating/Sales/Clean-up 3 (Intern)","10:00","13:00","",1,0,0,""],
+ ["Pie Sales","Pie Transporter + Plating/Sales/Clean-up 4 (Intern)","10:00","13:00","",1,0,0,""],
+ ["Pie Sales","Slice Area Assist 1","10:00","13:00","",0,0,0,"Place slices in rows as directed."],
+ ["Pie Sales","Slice Area Assist 2","10:00","13:00","",0,0,0,""],
+ ["Pie Sales","Slice Area Assist 3","10:00","13:00","",0,0,0,""],
+ ["Pie Sales","Pie Plate Pick-up Table 1","10:00","13:00","",0,0,0,"Pie drop-off tables become the pick-up area. Verify each baker's pick-up slip against the list Shar provides after check-in closes. Unclaimed plates: Shar follows up via baker emails."],
+ ["Pie Sales","Pie Plate Pick-up Table 2","10:00","13:00","",0,0,0,""],
+ ["Pie Sales","Sales Table Cashier 1","10:45","12:30","",0,0,0,"$3 per slice, cash + change."],
+ ["Pie Sales","Sales Table Cashier 2","10:45","12:30","",0,0,0,""],
+ ["Pie Sales","Sales Table Cashier 3","10:45","12:30","",0,0,0,""],
+ ["End of Day","EOD Shed","11:45","13:30","",0,0,1,""],
+ ["End of Day","EOD Intern","11:45","13:30","",1,0,0,""],
+ ["End of Day","EOD Intern","11:45","13:30","",1,0,0,""],
+ ["End of Day","EOD Intern","11:45","13:30","",1,0,0,""],
+ ["Market Support","Manager's Tent Shift 1","7:45","10:30","",0,0,0,"Direct bakers to pie check-in tent and judges to judge check-in (near music)."],
+ ["Market Support","Manager's Tent Shift 2","10:30","12:45","",0,0,0,"Direct bakers to check-in area to retrieve empty pie plates. Make sure tent staff knows where to send people for announcements, sales, etc."],
+ ["Market Support","Music Stage Manager","8:45","13:00","",0,0,0,"Harris/Peter will pause the performance for winner announcements. APCC should be in place by the tent."],
+ ["Market Support","Music Intern","8:45","11:15","",1,0,0,""],
+ ["Market Support","Music Shift 2 Intern","11:45","13:15","",1,0,0,""],
+];
+
+const PHASES = [
+ {name:"Setup", s:4.5, e:7.5, row:0},
+ {name:"Prep", s:7.5, e:8.25, row:0},
+ {name:"Pie check-in", s:7.75, e:9.75, row:1},
+ {name:"Judging", s:9.25, e:10.33, row:0},
+ {name:"Scoring", s:10.33, e:10.83, row:1},
+ {name:"Winners!", s:10.83, e:11.25, row:0},
+ {name:"Pie sales", s:10.75, e:12.5, row:2},
+ {name:"Breakdown", s:11.75, e:13.5, row:0},
+];
+
+/* ---------------- helpers ---------------- */
+const pct = h => ((h - DAY_START) / (DAY_END - DAY_START) * 100);
+function parseTime(s){
+  if(typeof s === "number") return s;
+  const m = String(s).trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm|a|p)?\.?m?\.?$/i);
+  if(!m) return null;
+  let h = +m[1];
+  const mn = m[2] ? (+m[2])/60 : 0;
+  const ap = (m[3]||"").toLowerCase();
+  if(ap.startsWith("p") && h < 12) h += 12;
+  else if(ap.startsWith("a") && h === 12) h = 0;
+  else if(!ap && h >= 1 && h <= 3) h += 12; // bare 1:00–3:59 = afternoon (market day runs 4:30 AM–1:30 PM)
+  return h + mn;
+}
+function fmt(h){
+  let hr = Math.floor(h), mn = Math.round((h-hr)*60);
+  if(mn===60){hr++;mn=0}
+  const ap = hr>=12 ? "PM" : "AM";
+  let h12 = hr%12; if(h12===0) h12=12;
+  return h12 + (mn? ":"+String(mn).padStart(2,"0") : ":00") + " " + ap;
+}
+function status(role){
+  const w = (role.who||"").trim();
+  if(w.toUpperCase()==="TBD") return "tbd";
+  return w ? "filled" : "open";
+}
+
+/* ---------------- state ---------------- */
+let ROLES = [];         // flat, normalized
+let currentFilter = "all";
+let dayofOn = false;
+let dayofTimer = null;
+
+function normalizeSnapshot(){
+  return SNAPSHOT.map((r,i)=>({
+    area:r[0], role:r[1], start:parseTime(r[2]), end:parseTime(r[3]),
+    who:r[4], intern:!!r[5], isnew:!!r[6], est:!!r[7], notes:r[8]||"", sort:i
+  }));
+}
+
+async function loadAirtable(){
+  const headers = {};
+  let url;
+  if(AIRTABLE.apiUrl){
+    url = AIRTABLE.apiUrl;
+  } else {
+    url = `https://api.airtable.com/v0/${AIRTABLE.baseId}/${encodeURIComponent(AIRTABLE.table)}?pageSize=100`;
+    headers["Authorization"] = "Bearer " + AIRTABLE.token;
+  }
+  let records = [], offset = null, guard = 0;
+  do{
+    const res = await fetch(url + (offset ? (url.includes("?")?"&":"?") + "offset="+offset : ""), {headers});
+    if(!res.ok) throw new Error("Airtable HTTP " + res.status);
+    const data = await res.json();
+    records = records.concat(data.records || []);
+    offset = data.offset || null;
+  } while(offset && ++guard < 10);
+
+  const out = records.map((rec,i)=>{
+    const f = rec.fields || {};
+    return {
+      area: f["Area"] || "Unsorted",
+      role: f["Role"] || "(unnamed role)",
+      start: parseTime(f["Start"]),
+      end: parseTime(f["End"]),
+      who: f["Assigned To"] || "",
+      intern: !!f["Intern"],
+      isnew: !!f["New 2026"],
+      est: !!f["End Estimated"],
+      notes: f["Notes"] || "",
+      sort: (typeof f["Sort"]==="number") ? f["Sort"] : 1000+i
+    };
+  }).filter(r => r.start!==null && r.end!==null);
+  if(!out.length) throw new Error("No usable records");
+  return out;
+}
+
+function setSource(mode, msg){
+  const pill = document.getElementById("srcPill");
+  const txt = document.getElementById("srcText");
+  pill.className = "pill " + (mode==="live" ? "live" : mode==="err" ? "err" : "snap");
+  txt.textContent = msg;
+  document.getElementById("srcWhen").textContent =
+    "Updated " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+}
+
+async function load(){
+  if(AIRTABLE.enabled){
+    setSource("snap","Connecting to Airtable…");
+    try{
+      ROLES = await loadAirtable();
+      setSource("live","Live from Airtable");
+    }catch(err){
+      console.error("Airtable load failed:", err);
+      ROLES = normalizeSnapshot();
+      setSource("err","Airtable unreachable — showing built-in snapshot");
+    }
+  } else {
+    ROLES = normalizeSnapshot();
+    setSource("snap","Built-in snapshot (Airtable not connected)");
+  }
+  renderStats();
+  renderSched();
+}
+
+/* ---------------- stats ---------------- */
+function renderStats(){
+  let total=ROLES.length, filled=0, interns=0, newRoles=0;
+  ROLES.forEach(r=>{
+    if(status(r)==="filled") filled++;
+    if(r.intern) interns++;
+    if(r.isnew) newRoles++;
+  });
+  const open = total - filled;
+  const pc = total ? Math.round(filled/total*100) : 0;
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="num">${total}</div><div class="lbl">Total roles</div></div>
+    <div class="stat filled"><div class="num">${filled}</div><div class="lbl">Filled</div></div>
+    <div class="stat open"><div class="num">${open}</div><div class="lbl">Still open</div></div>
+    <div class="stat pct"><div class="num">${pc}%</div><div class="lbl">Staffed</div></div>
+    <div class="stat"><div class="num">${newRoles}</div><div class="lbl">New for 2026</div></div>`;
+}
+
+/* ---------------- sky band ---------------- */
+function nowHours(){
+  const d = new Date();
+  return d.getHours() + d.getMinutes()/60;
+}
+function renderSky(){
+  const sky = document.getElementById("sky");
+  let html = "";
+  for(let h=5; h<=13; h++){
+    html += `<div class="tick ${h>=9?'late':''}" style="left:${pct(h)}%"><span>${fmt(h)}</span></div>`;
+  }
+  PHASES.forEach(p=>{
+    const top = 14 + (p.row||0)*46;
+    const span = p.e - p.s;
+    const timeStr = fmt(p.s) + "–" + fmt(p.e);
+    // every bar spans its real duration; narrow ones drop the time text (hover/tap title has it)
+    const short = span < 2.2;
+    const label = short ? p.name : `${p.name}<small>${timeStr}</small>`;
+    html += `<button class="phase ${short?'short':''}" style="left:${pct(p.s)}%;width:${pct(p.e)-pct(p.s)}%;top:${top}px" data-jump="1" data-s="${p.s}" data-e="${p.e}" title="${p.name} · ${timeStr}">${label}</button>`;
+  });
+  const nh = nowHours();
+  if(dayofOn && nh > DAY_START && nh < DAY_END){
+    html += `<div class="nowline" style="left:${pct(nh)}%"></div>`;
+  }
+  sky.innerHTML = html;
+}
+renderSky();
+
+/* ---------------- schedule ---------------- */
+function match(r){
+  const s = status(r);
+  switch(currentFilter){
+    case "open": return s!=="filled";
+    case "filled": return s==="filled";
+    case "intern": return !!r.intern;
+    case "new": return !!r.isnew;
+    default: return true;
+  }
+}
+
+function groupRoles(){
+  const byArea = {};
+  ROLES.forEach(r=>{ (byArea[r.area] = byArea[r.area] || []).push(r); });
+  const areas = AREA_ORDER.filter(a=>byArea[a]);
+  Object.keys(byArea).forEach(a=>{ if(!areas.includes(a)) areas.push(a); });
+  return areas.map(a=>({name:a, roles:byArea[a].sort((x,y)=>x.sort-y.sort)}));
+}
+
+function renderSched(){
+  const sched = document.getElementById("sched");
+  let html = `<div class="timehead"><div class="rolecol"></div><div class="axis">`;
+  for(let h=5; h<=13; h++) html += `<span style="left:${pct(h)}%">${fmt(h)}</span>`;
+  html += `</div></div>`;
+
+  let shown = 0;
+  groupRoles().forEach((g,gi)=>{
+    const roles = g.roles.filter(match);
+    if(!roles.length) return;
+    const openCt = roles.filter(r=>status(r)!=="filled").length;
+    html += `<div class="grouphdr" id="grp-${gi}" data-area="${g.name}">${g.name} <span class="cnt">${roles.length} role${roles.length>1?'s':''}${openCt? ' · '+openCt+' open':''}</span></div>`;
+    roles.forEach(r=>{
+      shown++;
+      const s = status(r);
+      const idx = ROLES.indexOf(r);
+      html += `<div class="row">
+        <div class="rolecol">${r.role}<span class="name ${s==="filled"?"":"miss"}">${s==="filled" ? r.who : (s==="tbd" ? "TBD" : "— unfilled —")}</span></div>
+        <div class="lane">`;
+      for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
+      if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
+      const left = Math.max(pct(r.start), 0);
+      const width = Math.max(pct(r.end)-pct(r.start), 3.5);
+      const label = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
+      html += `<button class="bar ${s} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role}">${label}${r.isnew?'<span class="newtag">NEW</span>':''}</button>`;
+      html += `</div></div>`;
+    });
+  });
+  if(!shown) html += `<div class="emptystate">No roles match this filter.</div>`;
+  sched.innerHTML = html;
+}
+
+/* ---------------- day-of view ---------------- */
+function dName(r){
+  const s = status(r);
+  const who = s==="filled"
+    ? `<span class="whotag">${r.who}</span>`
+    : `<span class="whotag miss">${s==="tbd"?"TBD":"unfilled"}</span>`;
+  return `<div class="ditem"><b>${r.role}</b><span>${fmt(r.start)}–${fmt(r.end)} · ${r.area}</span><br>${who}</div>`;
+}
+function renderDayof(){
+  if(!dayofOn) return;
+  const nh = nowHours();
+  const d = new Date();
+  document.getElementById("dClock").innerHTML =
+    d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) +
+    `<small>${nh < DAY_START ? "before market open" : nh > DAY_END ? "after breakdown window" : "market hours"}</small>`;
+
+  const nowR  = ROLES.filter(r=>r.start<=nh && r.end>nh).sort((a,b)=>a.end-b.end);
+  const nextR = ROLES.filter(r=>r.start>nh && r.start<=nh+1).sort((a,b)=>a.start-b.start);
+  const wrapR = ROLES.filter(r=>r.end>nh && r.end<=nh+0.5).sort((a,b)=>a.end-b.end);
+
+  const put = (id, list, empty) => {
+    document.getElementById(id).innerHTML =
+      list.length ? list.map(dName).join("") : `<p class="dempty">${empty}</p>`;
+  };
+  put("dNow",  nowR,  "Nothing on the clock right now.");
+  put("dNext", nextR, "No arrivals in the next hour.");
+  put("dWrap", wrapR, "Nothing ending in the next 30 minutes.");
+
+  renderSky();
+  renderSched();
+}
+function toggleDayof(){
+  dayofOn = !dayofOn;
+  document.getElementById("dayof").classList.toggle("on", dayofOn);
+  document.getElementById("dayofBtn").textContent = dayofOn ? "✕ Close day-of view" : "☀ Day-of view";
+  if(dayofOn){
+    renderDayof();
+    dayofTimer = setInterval(renderDayof, 60000);
+  } else {
+    clearInterval(dayofTimer);
+    renderSky();
+    renderSched();
+  }
+}
+
+/* ---------------- interactions ---------------- */
+const detail = document.getElementById("detail");
+document.addEventListener("click", e=>{
+  const bar = e.target.closest(".bar");
+  if(bar){
+    const r = ROLES[+bar.dataset.role];
+    if(!r) return;
+    const s = status(r);
+    document.getElementById("dTitle").textContent = r.role + (r.isnew ? "  ·  NEW 2026" : "");
+    const who = document.getElementById("dWho");
+    who.className = "assignee " + (s==="filled" ? "" : s);
+    who.textContent = s==="filled" ? "👤 " + r.who : (s==="tbd" ? "⏳ TBD — needs confirmation" : "○ Unfilled — needs a volunteer");
+    document.getElementById("dMeta").textContent =
+      r.area + " · " + fmt(r.start) + "–" + fmt(r.end) + (r.est?" (end estimated)":"") + (r.intern ? " · Intern role" : "");
+    document.getElementById("dNotes").textContent = r.notes || "No detailed description yet — add one in the Notes field in Airtable.";
+    detail.classList.add("openp");
+    return;
+  }
+  const jump = e.target.closest("[data-jump]");
+  if(jump){
+    const s=+jump.dataset.s, en=+jump.dataset.e;
+    const groups = groupRoles();
+    for(let gi=0; gi<groups.length; gi++){
+      if(groups[gi].roles.some(r=>match(r) && r.start<en && r.end>s)){
+        const el = document.getElementById("grp-"+gi);
+        if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
+        break;
+      }
+    }
+    return;
+  }
+  const chip = e.target.closest(".chip");
+  if(chip){
+    document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
+    chip.classList.add("on");
+    currentFilter = chip.dataset.f;
+    renderSched();
+    return;
+  }
+  if(e.target.id==="refreshBtn"){ load(); return; }
+  if(e.target.id==="dayofBtn"){ toggleDayof(); return; }
+  if(e.target.id==="detailClose" || (!e.target.closest(".detail") && detail.classList.contains("openp"))){
+    detail.classList.remove("openp");
+  }
+});
+document.addEventListener("keydown", e=>{
+  if(e.key==="Escape") detail.classList.remove("openp");
+});
+
+load().then(()=>{ if(dayofOn) renderDayof(); });
+</script>
+</body>
+</html>
