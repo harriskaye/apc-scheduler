@@ -718,7 +718,7 @@ document.addEventListener("click", e=>{
     const btn = document.getElementById("dRequest");
     if(s==="open" && !r.pending){
       btn.style.display = "inline-block";
-      btn.href = SIGNUP_FORM_URL + "?prefill_Role=" + encodeURIComponent(r.role) + "&hide_Role=true";
+      btn.href = SIGNUP_FORM_URL + "?prefill_Role=" + encodeURIComponent(r.role);
     } else {
       btn.style.display = "none";
     }
