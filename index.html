@@ -758,7 +758,7 @@ document.addEventListener("click", e=>{
     who.className = "assignee " + (s==="filled" ? "" : (r.pending ? "pend" : "none"));
     who.textContent = s==="filled" ? "👤 " + r.who
       : (r.pending ? "⏳ Requested by " + r.pending + " — pending confirmation"
-                   : (r.intern ? "🎓 Intern shift — assigned by the market team"
+                   : (r.intern ? "🎓 Intern shift"
                                : "○ Unfilled — needs a volunteer"));
     const box = document.getElementById("signupBox");
     if(s==="open" && !r.pending && !r.intern){
