@@ -41,7 +41,7 @@ module.exports = async (req, res) => {
       status: (rec.fields && rec.fields["Status"]) || "New",
     }));
 
-    res.setHeader("Cache-Control", "s-maxage=60, stale-while-revalidate=300");
+    res.setHeader("Cache-Control", "s-maxage=10, stale-while-revalidate=30");
     return res.status(200).json({ records: roleRecords, signups });
   } catch (err) {
     return res.status(500).json({ error: String(err) });
