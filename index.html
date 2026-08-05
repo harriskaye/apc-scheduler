@@ -103,7 +103,6 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
 .phase:focus-visible{box-shadow:0 0 0 3px var(--apple)}
 .phase small{font-weight:500;color:var(--ink-soft);margin-left:6px}
 .phase.short{justify-content:center;padding:0 3px;overflow:visible;text-overflow:clip}
-.bandnote{font-size:.78rem;color:var(--ink-soft);margin-top:8px}
 .nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--apple);z-index:2}
 .nowline::after{
   content:"NOW";position:absolute;top:2px;left:4px;
@@ -214,7 +213,6 @@ h1{font-size:clamp(1.7rem,4.5vw,2.6rem);font-weight:900;line-height:1.05;letter-
   .detail{left:auto;right:20px;bottom:20px;width:440px;border:1px solid var(--line);border-top:2px solid var(--ink);border-radius:12px}
 }
 
-footer{margin-top:40px;font-size:.72rem;color:var(--ink-soft)}
 @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
 </style>
 </head>
@@ -236,7 +234,6 @@ footer{margin-top:40px;font-size:.72rem;color:var(--ink-soft)}
 <section class="dayband" aria-label="Progression of the day">
   <h2>How the day unfolds</h2>
   <div class="sky" id="sky"></div>
-  <p class="bandnote">Managers arrive in the dark at 4:30, pies arrive at sunrise, judging happens in full morning light. Click a phase to jump to its roles.</p>
 </section>
 
 <section class="dayof" id="dayof" aria-label="Day-of master view">
@@ -268,7 +265,6 @@ footer{margin-top:40px;font-size:.72rem;color:var(--ink-soft)}
   <div class="sched"><div class="sched-inner" id="sched"></div></div>
 </section>
 
-<footer>Live data via Airtable · Falls back to the built-in snapshot if the connection fails · Pleasantville Farmers Market</footer>
 </div>
 
 <div class="detail" id="detail" role="dialog" aria-modal="false" aria-label="Role details">
@@ -303,11 +299,11 @@ footer{margin-top:40px;font-size:.72rem;color:var(--ink-soft)}
    token server-side (same pattern as the inspection map).
    ===================================================================== */
 const AIRTABLE = {
-  enabled: false,                 // ← flip to true when configured
-  baseId:  "appXXXXXXXXXXXXXX",   // from airtable.com/api
-  table:   "APC Roles 2026",
-  token:   "patXXXXXXXXXXXXXX",   // read-only PAT (or leave "" if using a proxy)
-  apiUrl:  ""                     // optional: e.g. "/api/apc-roles" on Vercel — if set, token is ignored
+  enabled: true,
+  baseId:  "",       // not needed — the proxy knows the base
+  table:   "",       // not needed — the proxy knows the table
+  token:   "",       // never in this file; lives in a Vercel environment variable
+  apiUrl:  "/api/roles"
 };
 
 const AREA_ORDER = [
