@@ -210,13 +210,21 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .emptystate{padding:30px;text-align:center;color:var(--ink-soft);font-size:.85rem}
 
 /* ---------- detail panel ---------- */
-.detail{
-  position:fixed;inset:auto 0 0 0;background:var(--card);
-  border-top:2px solid var(--ink);box-shadow:0 -8px 30px rgba(0,0,0,.15);
-  padding:18px 20px 24px;transform:translateY(105%);transition:transform .2s ease;
-  z-index:50;max-height:60vh;overflow-y:auto;
+.backdrop{
+  position:fixed;inset:0;background:rgba(43,35,32,.45);
+  opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:49;
 }
-.detail.openp{transform:translateY(0)}
+.backdrop.on{opacity:1;pointer-events:auto}
+.detail{
+  position:fixed;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(.96);opacity:0;pointer-events:none;
+  width:min(560px,92vw);max-height:78vh;overflow-y:auto;
+  background:var(--card);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  padding:22px 24px 26px;transition:opacity .18s ease, transform .18s ease;
+  z-index:50;
+}
+.detail.openp{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
 .detail .close{position:absolute;top:10px;right:14px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--ink-soft);font-family:inherit}
 .detail h3{font-size:1.1rem;margin-bottom:2px;padding-right:30px}
 .detail .assignee{
@@ -227,9 +235,6 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .detail .assignee.none{background:var(--apple-soft);color:var(--apple)}
 .detail .meta{font-size:.78rem;color:var(--ink-soft);margin-bottom:10px}
 .detail .notes{font-size:.85rem;white-space:pre-wrap;max-width:760px}
-@media (min-width:800px){
-  .detail{left:auto;right:20px;bottom:20px;width:440px;border:1px solid var(--line);border-top:2px solid var(--ink);border-radius:12px}
-}
 
 @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
 </style>
@@ -287,7 +292,8 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 
 </div>
 
-<div class="detail" id="detail" role="dialog" aria-modal="false" aria-label="Role details">
+<div class="backdrop" id="backdrop"></div>
+<div class="detail" id="detail" role="dialog" aria-modal="true" aria-label="Role details">
   <button class="close" id="detailClose" aria-label="Close details">×</button>
   <h3 id="dTitle"></h3>
   <div><span class="assignee" id="dWho"></span></div>
@@ -685,6 +691,7 @@ document.addEventListener("click", e=>{
       r.area + " · " + fmt(r.start) + "–" + fmt(r.end) + (r.est?" (end estimated)":"") + (r.intern ? " · Intern role" : "");
     document.getElementById("dNotes").textContent = r.notes || "No detailed description yet — add one in the Notes field in Airtable.";
     detail.classList.add("openp");
+    document.getElementById("backdrop").classList.add("on");
     return;
   }
   const ghdr = e.target.closest(".grouphdr");
@@ -726,10 +733,11 @@ document.addEventListener("click", e=>{
   if(e.target.id==="dayofBtn"){ toggleDayof(); return; }
   if(e.target.id==="detailClose" || (!e.target.closest(".detail") && detail.classList.contains("openp"))){
     detail.classList.remove("openp");
+    document.getElementById("backdrop").classList.remove("on");
   }
 });
 document.addEventListener("keydown", e=>{
-  if(e.key==="Escape") detail.classList.remove("openp");
+  if(e.key==="Escape"){ detail.classList.remove("openp"); document.getElementById("backdrop").classList.remove("on"); }
   if((e.key==="Enter"||e.key===" ") && e.target.classList && e.target.classList.contains("grouphdr")){
     e.preventDefault(); e.target.click();
   }
