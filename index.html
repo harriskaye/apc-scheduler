@@ -73,39 +73,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .stat.pct .num{color:var(--intern)}
 
 /* ---------- day band ---------- */
-.dayband{margin:18px 0 4px}
-.dayband h2{font-size:.95rem;font-weight:700;margin-bottom:8px;cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:6px}
-.dayband h2 .chev{font-size:.75rem;color:var(--ink-soft);transition:transform .15s}
-.dayband.closed h2 .chev{transform:rotate(-90deg)}
-.dayband.closed .sky{display:none}
-.sky{
-  position:relative;border-radius:14px;overflow:hidden;
-  background:linear-gradient(90deg,
-    #1b2340 0%, #33305c 8%, #6e4a6b 16%, #b5654f 24%,
-    #e0954a 32%, #f2c14e 42%, #cfe0ea 60%, #bfd7ea 100%);
-  height:172px;
-  box-shadow:inset 0 0 0 1px rgba(43,35,32,.12);
-}
-.sky .tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.35)}
-.sky .tick span{
-  position:absolute;bottom:6px;left:4px;font-size:.62rem;font-weight:600;
-  color:rgba(255,255,255,.9);text-shadow:0 1px 2px rgba(0,0,0,.35);white-space:nowrap;
-}
-.sky .tick.late span{color:rgba(43,35,32,.75);text-shadow:none}
-.phase{
-  position:absolute;height:34px;border-radius:7px;
-  background:rgba(255,255,255,.92);
-  border:1px solid rgba(43,35,32,.18);
-  display:flex;align-items:center;padding:0 10px;
-  font-size:.72rem;font-weight:700;letter-spacing:.02em;
-  cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  transition:transform .12s ease, box-shadow .12s ease;
-  font-family:inherit;
-}
-.phase:hover,.phase:focus-visible{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.18);outline:none}
-.phase:focus-visible{box-shadow:0 0 0 3px var(--apple)}
-.phase small{font-weight:500;color:var(--ink-soft);margin-left:6px}
-.phase.short{justify-content:center;padding:0 3px;overflow:visible;text-overflow:clip}
+
 .nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--apple);z-index:2}
 .nowline::after{
   content:"NOW";position:absolute;top:2px;left:4px;
@@ -261,11 +229,6 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   <div class="stats" id="stats"></div>
 </header>
 
-<section class="dayband" aria-label="Progression of the day">
-  <h2 id="bandToggle"><span class="chev">▾</span>How the day unfolds</h2>
-  <div class="sky" id="sky"></div>
-</section>
-
 <section aria-label="Full schedule">
   <div class="controls">
   <div class="filters" id="filters" role="group" aria-label="Filter roles">
@@ -414,17 +377,6 @@ const SNAPSHOT = [
  ["Market Support","Music Shift 2 Intern","11:45","13:15","",1,0,0,""],
 ];
 
-const PHASES = [
- {name:"Setup", s:4.5, e:7.5, row:0, area:"Pre-Market Operations"},
- {name:"Prep", s:7.5, e:8.25, row:0, area:"Pre-Event Prep"},
- {name:"Pie check-in", s:7.75, e:9.75, row:1, area:"Sign-In Table"},
- {name:"Judging", s:9.25, e:10.33, row:0, area:"Gazebo — Judging"},
- {name:"Scoring", s:10.33, e:11, row:1, area:"Gazebo — Judging"},
- {name:"Winners!", s:11, e:11.25, row:0, area:"Results & Announcement"},
- {name:"Pie sales", s:11.25, e:12.5, row:2, area:"Pie Sales"},
- {name:"Breakdown", s:11.75, e:13.5, row:0, area:"End of Day"},
-];
-
 /* ---------------- helpers ---------------- */
 const pct = h => ((h - DAY_START) / (DAY_END - DAY_START) * 100);
 function parseTime(s){
@@ -457,7 +409,6 @@ let currentFilter = "all";
 let personFilter = null;
 let dayofOn = false;
 let dayofTimer = null;
-let bandOpen = true;
 const collapsed = new Set();
 
 function normalizeSnapshot(){
@@ -575,34 +526,10 @@ function renderStats(){
   }
 }
 
-/* ---------------- sky band ---------------- */
 function nowHours(){
   const d = new Date();
   return d.getHours() + d.getMinutes()/60;
 }
-function renderSky(){
-  const sky = document.getElementById("sky");
-  let html = "";
-  for(let h=5; h<=13; h++){
-    html += `<div class="tick ${h>=9?'late':''}" style="left:${pct(h)}%"><span>${fmt(h)}</span></div>`;
-  }
-  PHASES.forEach(p=>{
-    const top = 10 + (p.row||0)*44;
-    const span = p.e - p.s;
-    const timeStr = fmt(p.s) + "–" + fmt(p.e);
-    // every bar spans its real duration; narrow ones drop the time text (hover/tap title has it)
-    const short = span < 2.2;
-    const label = p.name; // times live on the axis below and in the tooltip
-    html += `<button class="phase ${short?'short':''}" style="left:${pct(p.s)}%;width:${pct(p.e)-pct(p.s)}%;top:${top}px" data-jump="1" data-area="${p.area}" title="${p.name} · ${timeStr}">${label}</button>`;
-  });
-  const nh = nowHours();
-  if(dayofOn && nh > DAY_START && nh < DAY_END){
-    html += `<div class="nowline" style="left:${pct(nh)}%"></div>`;
-  }
-  sky.innerHTML = html;
-}
-renderSky();
-
 /* ---------------- schedule ---------------- */
 function match(r){
   if(personFilter && (r.who||"").trim() !== personFilter) return false;
@@ -696,7 +623,6 @@ document.querySelector(".sched").addEventListener("scroll", syncStickyAxis);
 /* ---------------- day-of view: the NOW line ---------------- */
 function renderDayof(){
   if(!dayofOn) return;
-  renderSky();
   renderSched();
 }
 function toggleDayof(){
@@ -707,7 +633,6 @@ function toggleDayof(){
     dayofTimer = setInterval(renderDayof, 60000);
   } else {
     clearInterval(dayofTimer);
-    renderSky();
     renderSched();
   }
 }
@@ -801,26 +726,6 @@ document.addEventListener("click", e=>{
     const a = ghdr.dataset.grp;
     if(collapsed.has(a)) collapsed.delete(a); else collapsed.add(a);
     renderSched();
-    return;
-  }
-  if(e.target.closest("#bandToggle")){
-    bandOpen = !bandOpen;
-    document.querySelector(".dayband").classList.toggle("closed", !bandOpen);
-    return;
-  }
-  const jump = e.target.closest("[data-jump]");
-  if(jump){
-    const a = jump.dataset.area;
-    if(collapsed.has(a)){ collapsed.delete(a); renderSched(); }
-    let el = document.querySelector(`.grouphdr[data-grp="${a}"]`);
-    if(!el && currentFilter !== "all"){
-      // section hidden by the current filter: reset to All so the click always lands
-      currentFilter = "all";
-      document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c.dataset.f==="all"));
-      renderSched();
-      el = document.querySelector(`.grouphdr[data-grp="${a}"]`);
-    }
-    if(el){ el.scrollIntoView({behavior:"smooth", block:"start"}); }
     return;
   }
   const chip = e.target.closest(".chip");
