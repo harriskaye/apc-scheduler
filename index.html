@@ -115,23 +115,6 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .lane .nowline{width:1.5px;z-index:1}
 .lane .nowline::after{display:none}
 
-/* ---------- day-of view ---------- */
-.dayof{display:none;margin:22px 0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
-.dayof.on{display:block}
-.dayof h2{font-size:1.05rem;margin-bottom:2px}
-.dayof .clock{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;margin:4px 0 12px}
-.dayof .clock small{font-family:'Public Sans',sans-serif;font-size:.75rem;font-weight:600;color:var(--ink-soft);margin-left:8px}
-.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-.dcol h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;font-family:'Public Sans',sans-serif;font-weight:700;color:var(--ink-soft);margin-bottom:8px}
-.dcol h3.now{color:var(--orchard)}
-.dcol h3.next{color:var(--amber)}
-.dcol h3.wrap{color:var(--apple)}
-.ditem{border:1px solid var(--line);border-radius:8px;padding:8px 11px;margin-bottom:6px;font-size:.85rem;line-height:1.35}
-.ditem b{display:block;font-weight:700}
-.ditem span{color:var(--ink-soft)}
-.ditem .whotag{color:var(--orchard);font-weight:700}
-.ditem .whotag.miss{color:var(--apple)}
-.dempty{font-size:.75rem;color:var(--ink-soft);font-style:italic}
 
 /* ---------- filters ---------- */
 .controls{position:sticky;top:0;z-index:20;background:var(--paper);padding:10px 0 8px;margin:18px 0 10px;border-bottom:1px solid var(--line)}
@@ -217,6 +200,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   border:none;font-family:inherit;
 }
 .bar:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
+.bar.tight{font-size:.66rem;padding:0 4px;justify-content:center;letter-spacing:-.01em}
 .bar.filled{background:var(--orchard)}
 .bar.open{background:var(--apple-soft);color:var(--apple);border:1.5px dashed var(--apple)}
 .bar.intern.filled{background:var(--intern)}
@@ -275,16 +259,6 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 <section class="dayband" aria-label="Progression of the day">
   <h2 id="bandToggle"><span class="chev">▾</span>How the day unfolds</h2>
   <div class="sky" id="sky"></div>
-</section>
-
-<section class="dayof" id="dayof" aria-label="Day-of master view">
-  <h2>Contest day, right now</h2>
-  <div class="clock" id="dClock"></div>
-  <div class="dgrid">
-    <div class="dcol"><h3 class="next">Arriving next (60 min)</h3><div id="dNext"></div></div>
-    <div class="dcol"><h3 class="now">Happening now</h3><div id="dNow"></div></div>
-    <div class="dcol"><h3 class="wrap">Wrapping up (30 min)</h3><div id="dWrap"></div></div>
-  </div>
 </section>
 
 <section aria-label="Full schedule">
@@ -484,11 +458,11 @@ function normalizeSnapshot(){
   }));
 }
 
-async function loadAirtable(){
+async function loadAirtable(fresh){
   const headers = {};
   let url;
   if(AIRTABLE.apiUrl){
-    url = AIRTABLE.apiUrl;
+    url = AIRTABLE.apiUrl + (fresh ? "?fresh=" + Date.now() : "");
   } else {
     url = `https://api.airtable.com/v0/${AIRTABLE.baseId}/${encodeURIComponent(AIRTABLE.table)}?pageSize=100`;
     headers["Authorization"] = "Bearer " + AIRTABLE.token;
@@ -541,11 +515,11 @@ function setSource(mode, msg){
     "Updated " + new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
 }
 
-async function load(){
+async function load(fresh){
   if(AIRTABLE.enabled){
     setSource("snap","Connecting to Airtable…");
     try{
-      const res = await loadAirtable();
+      const res = await loadAirtable(fresh);
       ROLES = res.roles;
       applyPending(res.signups);
       setSource("live","Live from Airtable");
@@ -659,13 +633,13 @@ function renderSched(){
       const left = Math.max(pct(r.start), 0);
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
       // bars are always TRUE length so back-to-back handoffs line up on the grid;
-      // the label inside shrinks to whatever fits: full range, start time, or compact start
+      // short bars show a compact range (no AM/PM — the axis below supplies it)
       const width = Math.max(pct(r.end)-pct(r.start), 1.2);
       const durB = r.end - r.start;
-      const barLabel = durB >= 1.5 ? fullTimes
-                     : durB >= 0.65 ? fmt(r.start)
-                     : fmt(r.start).replace(/ [AP]M$/, "");
-      html += `<button class="bar ${s} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${barLabel}</button>`;
+      const tight = durB < 1.5;
+      const compact = h => fmt(h).replace(/ [AP]M$/, "");
+      const barLabel = tight ? compact(r.start) + "–" + compact(r.end) : fullTimes;
+      html += `<button class="bar ${s} ${tight?'tight':''} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${barLabel}</button>`;
       html += `</div></div>`;
     });
   });
@@ -673,41 +647,15 @@ function renderSched(){
   sched.innerHTML = html;
 }
 
-/* ---------------- day-of view ---------------- */
-function dName(r){
-  const s = status(r);
-  const who = s==="filled"
-    ? `<span class="whotag">${r.who}</span>`
-    : `<span class="whotag miss">unfilled</span>`;
-  return `<div class="ditem"><b>${r.role}</b><span>${fmt(r.start)}–${fmt(r.end)} · ${r.area}</span><br>${who}</div>`;
-}
+/* ---------------- day-of view: the NOW line ---------------- */
 function renderDayof(){
   if(!dayofOn) return;
-  const nh = nowHours();
-  const d = new Date();
-  document.getElementById("dClock").innerHTML =
-    d.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) +
-    `<small>${nh < DAY_START ? "before market open" : nh > DAY_END ? "after breakdown window" : "market hours"}</small>`;
-
-  const nowR  = ROLES.filter(r=>r.start<=nh && r.end>nh).sort((a,b)=>a.end-b.end);
-  const nextR = ROLES.filter(r=>r.start>nh && r.start<=nh+1).sort((a,b)=>a.start-b.start);
-  const wrapR = ROLES.filter(r=>r.end>nh && r.end<=nh+0.5).sort((a,b)=>a.end-b.end);
-
-  const put = (id, list, empty) => {
-    document.getElementById(id).innerHTML =
-      list.length ? list.map(dName).join("") : `<p class="dempty">${empty}</p>`;
-  };
-  put("dNow",  nowR,  "Nothing on the clock right now.");
-  put("dNext", nextR, "No arrivals in the next hour.");
-  put("dWrap", wrapR, "Nothing ending in the next 30 minutes.");
-
   renderSky();
   renderSched();
 }
 function toggleDayof(){
   dayofOn = !dayofOn;
-  document.getElementById("dayof").classList.toggle("on", dayofOn);
-  document.getElementById("dayofBtn").textContent = dayofOn ? "✕ Close day-of view" : "☀ Day-of view";
+  document.getElementById("dayofBtn").textContent = dayofOn ? "✕ Hide NOW line" : "☀ Day-of view";
   if(dayofOn){
     renderDayof();
     dayofTimer = setInterval(renderDayof, 60000);
@@ -736,7 +684,10 @@ async function doSignup(){
     const data = await res.json();
     if(data.ok){
       msg.textContent = "🎉 You're in, " + name + "! Updating the schedule…";
-      await load();
+      // show it instantly from what we already know, then confirm against Airtable
+      const rr = ROLES.find(x => x.role === box.dataset.role && status(x) === "open" && !x.pending);
+      if(rr){ rr.who = name; renderStats(); renderSched(); }
+      await load(true);
       setTimeout(()=>{
         detail.classList.remove("openp");
         document.getElementById("backdrop").classList.remove("on");
@@ -744,7 +695,7 @@ async function doSignup(){
     } else if(data.reason === "taken"){
       msg.textContent = "Sorry — someone just grabbed this one! Pick another open role.";
       go.disabled = false; go.textContent = "👋 Sign up for this role";
-      await load();
+      await load(true);
     } else {
       throw new Error(data.reason || "unknown");
     }
@@ -840,6 +791,14 @@ document.addEventListener("keydown", e=>{
 });
 
 load().then(()=>{ if(dayofOn) renderDayof(); });
+
+// background sync: quietly re-pull every 60s so other viewers see new signups
+// without refreshing. Skips hidden tabs and moments when the detail popup is open.
+setInterval(()=>{
+  if(document.visibilityState === "visible" && !detail.classList.contains("openp")){
+    load();
+  }
+}, 60000);
 </script>
 </body>
 </html>
