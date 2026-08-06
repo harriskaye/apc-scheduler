@@ -201,7 +201,12 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   width:250px;flex:none;padding:6px 12px;font-size:.86rem;font-weight:600;
   border-right:1px solid var(--line);line-height:1.25;
 }
-.row .rolecol .name{display:block;font-weight:700;font-size:.8rem;color:var(--ink)}
+.row .rolecol .name{display:block;font-weight:700;font-size:.8rem;color:var(--ink);margin-top:2px}
+.whochip{
+  display:inline-block;background:#dbe7ca;color:#3a5a2b;
+  border-radius:6px;padding:1px 9px;font-weight:700;font-size:.78rem;line-height:1.5;
+}
+.whochip.intern{background:#d7e2f0;color:#30517c}
 .row .rolecol .name.miss{font-weight:400;color:var(--ink-soft)}
 .row .lane{position:relative;flex:1;height:40px}
 .bar{
@@ -647,16 +652,20 @@ function renderSched(){
       const s = status(r);
       const idx = ROLES.indexOf(r);
       html += `<div class="row ${s==="filled" ? (r.intern ? "rfilled rintern" : "rfilled") : (r.pending ? "rpend" : "")}" data-role="${idx}" title="Click for role details">
-        <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":(r.pending?"pend":"miss")}">${s==="filled" ? r.who : (r.pending ? "⏳ " + r.pending + " — pending" : " ")}</span></div>
+        <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":(r.pending?"pend":"miss")}">${s==="filled" ? `<span class="whochip ${r.intern?'intern':''}">${r.who}</span>` : (r.pending ? "⏳ " + r.pending + " — pending" : " ")}</span></div>
         <div class="lane">`;
       for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
       if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
       const left = Math.max(pct(r.start), 0);
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
-      // the time always lives inside the bar; short shifts get a minimum visual
-      // width that fits the label (start position and printed times stay exact)
-      const width = Math.max(pct(r.end)-pct(r.start), 13.5);
-      html += `<button class="bar ${s} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
+      // bars are always TRUE length so back-to-back handoffs line up on the grid;
+      // the label inside shrinks to whatever fits: full range, start time, or compact start
+      const width = Math.max(pct(r.end)-pct(r.start), 1.2);
+      const durB = r.end - r.start;
+      const barLabel = durB >= 1.5 ? fullTimes
+                     : durB >= 0.65 ? fmt(r.start)
+                     : fmt(r.start).replace(/ [AP]M$/, "");
+      html += `<button class="bar ${s} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${barLabel}</button>`;
       html += `</div></div>`;
     });
   });
