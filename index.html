@@ -563,7 +563,6 @@ function renderStats(){
     <div class="stat filled"><div class="num">${filled}</div><div class="lbl">Filled</div></div>
     <div class="stat open"><div class="num">${open}</div><div class="lbl">Still open</div></div>
     <div class="stat pct"><div class="num">${pc}%</div><div class="lbl">Staffed</div></div>
-    <div class="stat"><div class="num">${newRoles}</div><div class="lbl">New for 2026</div></div>
     ${pending ? `<div class="stat pend"><div class="num">${pending}</div><div class="lbl">Requested</div></div>` : ""}`;
   const mini = document.getElementById("miniStat");
   if(mini) mini.textContent = `${filled}/${total} filled \u00b7 ${pc}%`;
