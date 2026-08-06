@@ -190,6 +190,13 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   border-radius:6px;padding:1px 9px;font-weight:700;font-size:.78rem;line-height:1.5;
 }
 .whochip.intern{background:#d7e2f0;color:#30517c}
+.whochip:hover{filter:brightness(.93);cursor:pointer}
+#personSelect{
+  border:1px solid var(--line);background:var(--card);border-radius:999px;
+  padding:7px 12px;font-size:.84rem;font-weight:600;color:var(--ink-soft);
+  font-family:inherit;cursor:pointer;max-width:230px;
+}
+#personSelect:hover{border-color:var(--ink-soft)}
 .row .rolecol .name.miss{font-weight:400;color:var(--ink-soft)}
 .row .lane{position:relative;flex:1;height:40px}
 .bar{
@@ -270,6 +277,9 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
     <button class="chip" data-f="filled">Filled roles</button>
     <button class="chip" data-f="intern">Intern roles</button>
     <button class="chip" data-f="new">New for 2026</button>
+    <select id="personSelect" aria-label="View one person's day">
+      <option value="">👤 View someone's day…</option>
+    </select>
     <span class="mini" id="miniStat"></span>
   </div>
   <div class="legend">
@@ -446,6 +456,7 @@ function status(role){
 /* ---------------- state ---------------- */
 let ROLES = [];         // flat, normalized
 let currentFilter = "all";
+let personFilter = null;
 let dayofOn = false;
 let dayofTimer = null;
 let bandOpen = true;
@@ -557,6 +568,14 @@ function renderStats(){
     ${pending ? `<div class="stat pend"><div class="num">${pending}</div><div class="lbl">Requested</div></div>` : ""}`;
   const mini = document.getElementById("miniStat");
   if(mini) mini.textContent = `${filled}/${total} filled \u00b7 ${pc}%`;
+  // (re)fill the person dropdown from current assignments
+  const sel = document.getElementById("personSelect");
+  if(sel){
+    const names = [...new Set(ROLES.map(r=>(r.who||"").trim()).filter(n=>n && n.toUpperCase()!=="TBD"))].sort();
+    const cur = personFilter || "";
+    sel.innerHTML = '<option value="">👤 View someone\'s day\u2026</option>' +
+      names.map(n=>`<option value="${n.replace(/"/g,"&quot;")}"${n===cur?" selected":""}>${n}</option>`).join("");
+  }
 }
 
 /* ---------------- sky band ---------------- */
@@ -589,6 +608,7 @@ renderSky();
 
 /* ---------------- schedule ---------------- */
 function match(r){
+  if(personFilter && (r.who||"").trim() !== personFilter) return false;
   const s = status(r);
   switch(currentFilter){
     case "open": return s!=="filled";
@@ -633,24 +653,36 @@ function renderSched(){
       if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
       const left = Math.max(pct(r.start), 0);
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
-      // bars are always TRUE length so back-to-back handoffs line up on the grid;
-      // short bars show a compact range (no AM/PM — the axis below supplies it)
+      // bars are always TRUE length (micro bars get just enough width for a compact
+      // label); each bar renders its full label and fitBarLabels() downgrades to the
+      // compact form only where the text genuinely doesn't fit
       const durB = r.end - r.start;
-      // true width for everything 30 min and up (handoffs stay aligned);
-      // only micro bars (<~27 min, none of which abut a handoff) get just
-      // enough visual width to hold their compact label
       const trueW = pct(r.end)-pct(r.start);
       const width = durB < 0.45 ? Math.max(trueW, 6.4) : Math.max(trueW, 1.2);
-      const tight = durB < 1.5;
       const compact = h => fmt(h).replace(/ [AP]M$/, "");
-      const barLabel = tight ? compact(r.start) + "–" + compact(r.end) : fullTimes;
-      html += `<button class="bar ${s} ${tight?'tight':''} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" title="${r.role} · ${fullTimes}">${barLabel}</button>`;
+      const altLabel = compact(r.start) + "–" + compact(r.end);
+      html += `<button class="bar ${s} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
       html += `</div></div>`;
     });
   });
   if(!shown) html += `<div class="emptystate">No roles match this filter.</div>`;
   sched.innerHTML = html;
+  fitBarLabels();
 }
+
+// try the full label in each bar; where it overflows, fall back to the compact form
+function fitBarLabels(){
+  document.querySelectorAll(".bar").forEach(b=>{
+    b.classList.remove("tight");
+    b.textContent = b.dataset.full;
+    if(b.scrollWidth > b.clientWidth + 2){
+      b.classList.add("tight");
+      b.textContent = b.dataset.alt;
+    }
+  });
+}
+let fitTimer;
+window.addEventListener("resize", ()=>{ clearTimeout(fitTimer); fitTimer = setTimeout(fitBarLabels, 150); });
 
 /* ---------------- day-of view: the NOW line ---------------- */
 function renderDayof(){
@@ -712,7 +744,18 @@ async function doSignup(){
 
 /* ---------------- interactions ---------------- */
 const detail = document.getElementById("detail");
+function setPerson(name){
+  personFilter = name || null;
+  currentFilter = "all";
+  document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on", c.dataset.f==="all"));
+  const sel = document.getElementById("personSelect");
+  if(sel) sel.value = name || "";
+  renderSched();
+}
+
 document.addEventListener("click", e=>{
+  const who = e.target.closest(".whochip");
+  if(who){ setPerson(who.textContent.trim()); return; }
   const bar = e.target.closest(".bar") || e.target.closest(".row[data-role]");
   if(bar){
     const r = ROLES[+bar.dataset.role];
@@ -773,6 +816,8 @@ document.addEventListener("click", e=>{
   }
   const chip = e.target.closest(".chip");
   if(chip){
+    personFilter = null;
+    const psel = document.getElementById("personSelect"); if(psel) psel.value = "";
     document.querySelectorAll(".chip").forEach(c=>c.classList.remove("on"));
     chip.classList.add("on");
     currentFilter = chip.dataset.f;
@@ -787,6 +832,10 @@ document.addEventListener("click", e=>{
     document.getElementById("backdrop").classList.remove("on");
   }
 });
+document.addEventListener("change", e=>{
+  if(e.target.id === "personSelect") setPerson(e.target.value || null);
+});
+
 document.addEventListener("keydown", e=>{
   if(e.key==="Escape"){ detail.classList.remove("openp"); document.getElementById("backdrop").classList.remove("on"); }
   if(e.key==="Enter" && (e.target.id==="suName" || e.target.id==="suNote")) doSignup();
