@@ -207,7 +207,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   border:none;font-family:inherit;
 }
 .bar:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
-.bar.tight{font-size:.62rem;padding:0 3px;justify-content:center;letter-spacing:-.01em}
+.bar.tight{font-size:.68rem;padding:0 3px;justify-content:center;letter-spacing:-.01em}
 .bar.filled{background:var(--orchard)}
 .bar.open{background:var(--apple-soft);color:var(--apple);border:1.5px dashed var(--apple)}
 .bar.intern.filled{background:var(--intern)}
@@ -285,7 +285,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   <div class="legend">
     <span><i class="swatch" style="background:var(--orchard)"></i>Filled</span>
     <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open — click to sign up</span>
-    <span><i class="swatch" style="background:var(--intern)"></i>Intern shift — assigned by the market</span>
+    <span><i class="swatch" style="background:var(--intern)"></i>Intern shift</span>
     <span><i class="swatch" style="background:var(--apple)"></i>NEW role for 2026</span>
   </div>
   </div>
@@ -658,7 +658,7 @@ function renderSched(){
       // compact form only where the text genuinely doesn't fit
       const durB = r.end - r.start;
       const trueW = pct(r.end)-pct(r.start);
-      const width = durB < 0.45 ? Math.max(trueW, 6.4) : Math.max(trueW, 1.2);
+      const width = durB < 0.45 ? Math.max(trueW, 7.0) : Math.max(trueW, 1.2);
       const compact = h => fmt(h).replace(/ [AP]M$/, "");
       const altLabel = compact(r.start) + "–" + compact(r.end);
       html += `<button class="bar ${s} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
