@@ -200,7 +200,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   border:none;font-family:inherit;
 }
 .bar:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
-.bar.tight{font-size:.66rem;padding:0 4px;justify-content:center;letter-spacing:-.01em}
+.bar.tight{font-size:.62rem;padding:0 3px;justify-content:center;letter-spacing:-.01em}
 .bar.filled{background:var(--orchard)}
 .bar.open{background:var(--apple-soft);color:var(--apple);border:1.5px dashed var(--apple)}
 .bar.intern.filled{background:var(--intern)}
@@ -496,10 +496,11 @@ async function loadAirtable(fresh){
   return {roles: out, signups};
 }
 
-// a "New" (or not-yet-copied "Approved") signup claims one open row of its role
+// only a "New" signup claims an open row — "Approved" rows are just the log of
+// completed signups (history), and "Declined" is ignored entirely
 function applyPending(signups){
   (signups||[]).forEach(sg=>{
-    if(sg.status === "Declined") return;
+    if(sg.status !== "New") return;
     if(!sg.role) return;
     const r = ROLES.find(x => x.role === sg.role && status(x) === "open" && !x.pending);
     if(r) r.pending = (sg.name || "someone").trim();
@@ -634,8 +635,12 @@ function renderSched(){
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
       // bars are always TRUE length so back-to-back handoffs line up on the grid;
       // short bars show a compact range (no AM/PM — the axis below supplies it)
-      const width = Math.max(pct(r.end)-pct(r.start), 1.2);
       const durB = r.end - r.start;
+      // true width for everything 30 min and up (handoffs stay aligned);
+      // only micro bars (<~27 min, none of which abut a handoff) get just
+      // enough visual width to hold their compact label
+      const trueW = pct(r.end)-pct(r.start);
+      const width = durB < 0.45 ? Math.max(trueW, 6.4) : Math.max(trueW, 1.2);
       const tight = durB < 1.5;
       const compact = h => fmt(h).replace(/ [AP]M$/, "");
       const barLabel = tight ? compact(r.start) + "–" + compact(r.end) : fullTimes;
