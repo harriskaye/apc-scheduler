@@ -138,10 +138,8 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 /* ---------- schedule ---------- */
 .sched{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow-x:auto}
 .sched-inner{min-width:860px;position:relative}
-.timehead{
-  position:sticky;top:0;display:flex;height:30px;border-bottom:1px solid var(--line);
-  background:var(--card);z-index:3;
-}
+.timehead{display:flex;height:26px;background:transparent}
+.stickyaxis{overflow:hidden;margin-top:6px;border-top:1px solid var(--line);padding-top:2px}
 .timehead .rolecol{width:250px;flex:none;border-right:1px solid var(--line)}
 .timehead .axis{position:relative;flex:1}
 .timehead .axis span{position:absolute;top:6px;font-size:.72rem;font-weight:600;color:var(--ink-soft);transform:translateX(-50%)}
@@ -287,6 +285,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
     <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open — click to sign up</span>
     <span><i class="swatch" style="background:var(--intern)"></i>Intern shift</span>
   </div>
+  <div class="stickyaxis"><div class="timehead" id="stickyHead"><div class="rolecol"></div><div class="axis" id="saAxis"></div></div></div>
   </div>
   <div class="sched"><div class="sched-inner" id="sched"></div></div>
 </section>
@@ -420,8 +419,8 @@ const PHASES = [
  {name:"Prep", s:7.5, e:8.25, row:0, area:"Pre-Event Prep"},
  {name:"Pie check-in", s:7.75, e:9.75, row:1, area:"Sign-In Table"},
  {name:"Judging", s:9.25, e:10.33, row:0, area:"Gazebo — Judging"},
- {name:"Scoring", s:10.33, e:10.83, row:1, area:"Gazebo — Judging"},
- {name:"Winners!", s:10.83, e:11.25, row:0, area:"Results & Announcement"},
+ {name:"Scoring", s:10.33, e:11, row:1, area:"Gazebo — Judging"},
+ {name:"Winners!", s:11, e:11.25, row:0, area:"Results & Announcement"},
  {name:"Pie sales", s:11.25, e:12.5, row:2, area:"Pie Sales"},
  {name:"Breakdown", s:11.75, e:13.5, row:0, area:"End of Day"},
 ];
@@ -627,9 +626,11 @@ function groupRoles(){
 
 function renderSched(){
   const sched = document.getElementById("sched");
-  let html = `<div class="timehead"><div class="rolecol"></div><div class="axis">`;
-  for(let h=5; h<=13; h++) html += `<span style="left:${pct(h)}%">${fmt(h)}</span>`;
-  html += `</div></div>`;
+  // hour axis lives in the sticky bar so it stays visible while scrolling
+  let ax = "";
+  for(let h=5; h<=13; h++) ax += `<span style="left:${pct(h)}%">${fmt(h)}</span>`;
+  document.getElementById("saAxis").innerHTML = ax;
+  let html = "";
 
   let shown = 0;
   groupRoles().forEach((g,gi)=>{
@@ -665,7 +666,16 @@ function renderSched(){
   });
   if(!shown) html += `<div class="emptystate">No roles match this filter.</div>`;
   sched.innerHTML = html;
+  syncStickyAxis();
   fitBarLabels();
+}
+
+function syncStickyAxis(){
+  const head = document.getElementById("stickyHead");
+  const inner = document.getElementById("sched");
+  if(!head || !inner) return;
+  head.style.width = inner.getBoundingClientRect().width + "px";
+  head.style.transform = `translateX(${-inner.parentElement.scrollLeft}px)`;
 }
 
 // try the full label in each bar; where it overflows, fall back to the compact form
@@ -680,7 +690,8 @@ function fitBarLabels(){
   });
 }
 let fitTimer;
-window.addEventListener("resize", ()=>{ clearTimeout(fitTimer); fitTimer = setTimeout(fitBarLabels, 150); });
+window.addEventListener("resize", ()=>{ clearTimeout(fitTimer); fitTimer = setTimeout(()=>{ fitBarLabels(); syncStickyAxis(); }, 150); });
+document.querySelector(".sched").addEventListener("scroll", syncStickyAxis);
 
 /* ---------------- day-of view: the NOW line ---------------- */
 function renderDayof(){
