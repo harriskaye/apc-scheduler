@@ -134,11 +134,9 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .row.rfilled.rintern:hover{background:#e6edf5}
 .row.rpend{background:#fdf8ec}
 .row.rpend:hover{background:#faf2df}
-.row.rext{background:#e9e6df}
-.row.rext:hover{background:#e2ded5}
+.row.rext{background:#f0f1f1}
+.row.rext:hover{background:#e8eaea}
 .name.pend{color:#8a5c06 !important}
-.bar.pend{background:var(--amber-soft);color:#8a5c06;border:1.5px dashed var(--amber)}
-.bar.ext{background:#eae6de;color:#6e6357;border:1.5px dashed #a2957f}
 .stat.pend .num{color:var(--amber)}
 .detail .assignee.pend{background:var(--amber-soft);color:#8a5c06}
 .signupbox{display:none;margin:4px 0 14px;padding:12px;background:var(--paper);border:1px solid var(--line);border-radius:10px}
@@ -215,6 +213,9 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .detail .notes{font-size:.95rem;line-height:1.55;white-space:pre-wrap;max-width:760px}
 
 @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+/* state overrides — must come last to beat .bar.open */
+.bar.pend{background:var(--amber-soft);color:#8a5c06;border:1.5px dashed var(--amber)}
+.bar.ext{background:#edeff0;color:#5f676d;border:1.5px dashed #9aa2a8}
 </style>
 </head>
 <body>
@@ -250,7 +251,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
     <span><i class="swatch" style="background:var(--orchard)"></i>Filled</span>
     <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open — click to sign up</span>
     <span><i class="swatch" style="background:var(--intern)"></i>Intern shift</span>
-    <span><i class="swatch" style="background:#eae6de;border:1.5px dashed #a2957f"></i>External sign-up</span>
+    <span><i class="swatch" style="background:#edeff0;border:1.5px dashed #9aa2a8"></i>External sign-up</span>
   </div>
   <div class="stickyaxis"><div class="timehead" id="stickyHead"><div class="rolecol"></div><div class="axis" id="saAxis"></div></div></div>
   </div>
