@@ -236,8 +236,8 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
     <button class="chip on" data-f="all">All roles</button>
     <button class="chip" data-f="open">Open roles</button>
     <button class="chip" data-f="filled">Filled roles</button>
+    <button class="chip" data-f="adult">Adult roles</button>
     <button class="chip" data-f="intern">Intern roles</button>
-    <button class="chip" data-f="new">New for 2026</button>
     <select id="personSelect" aria-label="View one person's day">
       <option value="">👤 View someone's day…</option>
     </select>
@@ -541,8 +541,8 @@ function match(r){
   switch(currentFilter){
     case "open": return s!=="filled";
     case "filled": return s==="filled";
+    case "adult": return !r.intern;
     case "intern": return !!r.intern;
-    case "new": return !!r.isnew;
     default: return true;
   }
 }
