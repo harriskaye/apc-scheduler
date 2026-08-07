@@ -499,23 +499,27 @@ async function load(fresh){
 
 /* ---------------- stats ---------------- */
 function renderStats(){
-  let total=ROLES.length, filled=0, interns=0, newRoles=0, pending=0;
+  let total=ROLES.length, interns=0, adultFilled=0, pending=0;
   ROLES.forEach(r=>{
-    if(status(r)==="filled") filled++;
     if(r.intern) interns++;
-    if(r.isnew) newRoles++;
+    else if(status(r)==="filled") adultFilled++;
     if(r.pending) pending++;
   });
-  const open = total - filled;
-  const pc = total ? Math.round(filled/total*100) : 0;
+  const adults = total - interns;
+  const open = adults - adultFilled;
+  const pc = adults ? Math.round(adultFilled/adults*100) : 0;
+  // Filled / Still open / Staffed track ADULT recruiting only — intern shifts are
+  // assigned by the market and would muddy the thermometer
   document.getElementById("stats").innerHTML = `
     <div class="stat"><div class="num">${total}</div><div class="lbl">Total roles</div></div>
-    <div class="stat filled"><div class="num">${filled}</div><div class="lbl">Filled</div></div>
+    <div class="stat"><div class="num">${adults}</div><div class="lbl">Adult roles</div></div>
+    <div class="stat pct"><div class="num">${interns}</div><div class="lbl">Intern shifts</div></div>
+    <div class="stat filled"><div class="num">${adultFilled}</div><div class="lbl">Filled</div></div>
     <div class="stat open"><div class="num">${open}</div><div class="lbl">Still open</div></div>
     <div class="stat pct"><div class="num">${pc}%</div><div class="lbl">Staffed</div></div>
     ${pending ? `<div class="stat pend"><div class="num">${pending}</div><div class="lbl">Requested</div></div>` : ""}`;
   const mini = document.getElementById("miniStat");
-  if(mini) mini.textContent = `${filled}/${total} filled \u00b7 ${pc}%`;
+  if(mini) mini.textContent = `${adultFilled}/${adults} adult roles filled \u00b7 ${pc}%`;
   // (re)fill the person dropdown from current assignments
   const sel = document.getElementById("personSelect");
   if(sel){
