@@ -136,6 +136,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .row.rpend:hover{background:#faf2df}
 .name.pend{color:#8a5c06 !important}
 .bar.pend{background:var(--amber-soft);color:#8a5c06;border:1.5px dashed var(--amber)}
+.bar.ext{background:#f0ede7;color:#7a6f64;border:1.5px dashed #b6ab9d}
 .stat.pend .num{color:var(--amber)}
 .detail .assignee.pend{background:var(--amber-soft);color:#8a5c06}
 .signupbox{display:none;margin:4px 0 14px;padding:12px;background:var(--paper);border:1px solid var(--line);border-radius:10px}
@@ -247,6 +248,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
     <span><i class="swatch" style="background:var(--orchard)"></i>Filled</span>
     <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open — click to sign up</span>
     <span><i class="swatch" style="background:var(--intern)"></i>Intern shift</span>
+    <span><i class="swatch" style="background:#f0ede7;border:1.5px dashed #b6ab9d"></i>Arranged separately</span>
   </div>
   <div class="stickyaxis"><div class="timehead" id="stickyHead"><div class="rolecol"></div><div class="axis" id="saAxis"></div></div></div>
   </div>
@@ -411,10 +413,12 @@ let dayofOn = false;
 let dayofTimer = null;
 const collapsed = new Set();
 
+const EXTERNAL_ROLES = ["Manager's Tent Shift 1","Manager's Tent Shift 2","EOD Shed","Music Stage Manager"];
 function normalizeSnapshot(){
   return SNAPSHOT.map((r,i)=>({
     area:r[0], role:r[1], start:parseTime(r[2]), end:parseTime(r[3]),
-    who:r[4], intern:!!r[5], isnew:!!r[6], est:!!r[7], notes:r[8]||"", sort:i
+    who:r[4], intern:!!r[5], isnew:!!r[6], est:!!r[7], notes:r[8]||"",
+    external: EXTERNAL_ROLES.includes(r[1]), sort:i
   }));
 }
 
@@ -446,6 +450,7 @@ async function loadAirtable(fresh){
       end: parseTime(f["End"]),
       who: f["Assigned To"] || "",
       intern: !!f["Intern"],
+      external: !!f["External"],
       isnew: !!f["New 2026"],
       est: !!f["End Estimated"],
       notes: f["Notes"] || "",
@@ -591,7 +596,7 @@ function renderSched(){
       const width = durB < 0.45 ? Math.max(trueW, 7.0) : Math.max(trueW, 1.2);
       const compact = h => fmt(h).replace(/ [AP]M$/, "");
       const altLabel = compact(r.start) + "–" + compact(r.end);
-      html += `<button class="bar ${s} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
+      html += `<button class="bar ${s} ${(r.external && s!=="filled")?"ext":""} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
       html += `</div></div>`;
     });
   });
@@ -704,10 +709,11 @@ document.addEventListener("click", e=>{
     who.className = "assignee " + (s==="filled" ? "" : (r.pending ? "pend" : "none"));
     who.textContent = s==="filled" ? "👤 " + r.who
       : (r.pending ? "⏳ Requested by " + r.pending + " — pending confirmation"
+                   : (r.external ? "📋 Arranged separately"
                    : (r.intern ? "🎓 Intern shift"
-                               : "○ Unfilled — needs a volunteer"));
+                               : "○ Unfilled — needs a volunteer")));
     const box = document.getElementById("signupBox");
-    if(s==="open" && !r.pending && !r.intern){
+    if(s==="open" && !r.pending && !r.intern && !r.external){
       box.style.display = "block";
       box.dataset.role = r.role;
       document.getElementById("suName").value = "";
