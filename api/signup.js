@@ -2,7 +2,7 @@
 // Instantly assigns a volunteer to an open role: writes their name into the
 // FIRST open row matching the role, only if Assigned To is empty. Verifies the
 // write to handle two people racing for the same slot. Logs to Signups table.
- 
+
 const BASE_ID = "appULR9ueveTBZjAI";
 const ROLES_TABLE = "tblA5UXs2v0Q3GDPV";
 const SIGNUPS_TABLE = "tblDrBVb3zleqYOIl";
@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
 
   try {
     // find ALL open rows for this exact role (handles numbered duplicate slots)
-    const formula = `AND({Role}="${role.replace(/"/g, "")}", {Assigned To}="", NOT({Intern}))`;
+    const formula = `AND({Role}="${role.replace(/"/g, "")}", {Assigned To}="", NOT({Intern}), NOT({External}))`;
     const findUrl = `${API}/${BASE_ID}/${ROLES_TABLE}?filterByFormula=${encodeURIComponent(formula)}&sort%5B0%5D%5Bfield%5D=Sort&sort%5B0%5D%5Bdirection%5D=asc`;
     const findRes = await fetch(findUrl, { headers: auth });
     if (!findRes.ok) return res.status(502).json({ ok: false, reason: "Airtable HTTP " + findRes.status });
