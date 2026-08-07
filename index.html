@@ -134,6 +134,8 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .row.rfilled.rintern:hover{background:#e6edf5}
 .row.rpend{background:#fdf8ec}
 .row.rpend:hover{background:#faf2df}
+.row.rext{background:#f3f1ec}
+.row.rext:hover{background:#edeae3}
 .name.pend{color:#8a5c06 !important}
 .bar.pend{background:var(--amber-soft);color:#8a5c06;border:1.5px dashed var(--amber)}
 .bar.ext{background:#f0ede7;color:#7a6f64;border:1.5px dashed #b6ab9d}
@@ -248,7 +250,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
     <span><i class="swatch" style="background:var(--orchard)"></i>Filled</span>
     <span><i class="swatch" style="background:var(--apple-soft);border:1.5px dashed var(--apple)"></i>Open — click to sign up</span>
     <span><i class="swatch" style="background:var(--intern)"></i>Intern shift</span>
-    <span><i class="swatch" style="background:#f0ede7;border:1.5px dashed #b6ab9d"></i>Arranged separately</span>
+    <span><i class="swatch" style="background:#f0ede7;border:1.5px dashed #b6ab9d"></i>External sign-up</span>
   </div>
   <div class="stickyaxis"><div class="timehead" id="stickyHead"><div class="rolecol"></div><div class="axis" id="saAxis"></div></div></div>
   </div>
@@ -581,7 +583,7 @@ function renderSched(){
       shown++;
       const s = status(r);
       const idx = ROLES.indexOf(r);
-      html += `<div class="row ${s==="filled" ? (r.intern ? "rfilled rintern" : "rfilled") : (r.pending ? "rpend" : "")}" data-role="${idx}" title="Click for role details">
+      html += `<div class="row ${s==="filled" ? (r.intern ? "rfilled rintern" : "rfilled") : (r.pending ? "rpend" : (r.external ? "rext" : ""))}" data-role="${idx}" title="Click for role details">
         <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":(r.pending?"pend":"miss")}">${s==="filled" ? `<span class="whochip ${r.intern?'intern':''}">${r.who}</span>` : (r.pending ? "⏳ " + r.pending + " — pending" : " ")}</span></div>
         <div class="lane">`;
       for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
@@ -709,7 +711,7 @@ document.addEventListener("click", e=>{
     who.className = "assignee " + (s==="filled" ? "" : (r.pending ? "pend" : "none"));
     who.textContent = s==="filled" ? "👤 " + r.who
       : (r.pending ? "⏳ Requested by " + r.pending + " — pending confirmation"
-                   : (r.external ? "📋 Arranged separately"
+                   : (r.external ? "📋 External sign-up"
                    : (r.intern ? "🎓 Intern shift"
                                : "○ Unfilled — needs a volunteer")));
     const box = document.getElementById("signupBox");
