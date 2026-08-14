@@ -181,6 +181,13 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .bar.intern.open{background:var(--intern-soft);color:var(--intern);border:1.5px dashed var(--intern)}
 .bar.est{opacity:.85}
 .bar .newtag{background:var(--apple);color:#fff;border-radius:3px;font-size:.55rem;padding:1px 4px;margin-left:5px;flex:none}
+/* label rendered beside a bar too narrow to hold its own text */
+.outlbl{
+  position:absolute;top:8px;height:24px;
+  display:flex;align-items:center;
+  font-size:.7rem;font-weight:700;color:var(--ink-soft);
+  white-space:nowrap;pointer-events:none;z-index:1;
+}
 .gridline{position:absolute;top:0;bottom:0;width:1px;background:#f3ede4;z-index:0}
 .gridline.hour{background:#e9e1d5}
 .emptystate{padding:30px;text-align:center;color:var(--ink-soft);font-size:.85rem}
@@ -211,6 +218,17 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .detail .assignee.none{background:var(--apple-soft);color:var(--apple)}
 .detail .meta{font-size:.86rem;color:var(--ink-soft);margin-bottom:10px}
 .detail .notes{font-size:.95rem;line-height:1.55;white-space:pre-wrap;max-width:760px}
+
+/* ---------- mobile ---------- */
+@media (max-width:640px){
+  .sched-inner{min-width:700px}
+  .timehead .rolecol,.row .rolecol{width:160px}
+  .row .rolecol{font-size:.78rem;padding:6px 8px}
+  .row .rolecol .name{font-size:.74rem}
+  .bar{font-size:.68rem;padding:0 5px}
+  .outlbl{font-size:.66rem}
+  .timehead .axis span{font-size:.66rem}
+}
 
 @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
 /* state overrides — must come last to beat .bar.open */
@@ -585,18 +603,17 @@ function renderSched(){
       const s = status(r);
       const idx = ROLES.indexOf(r);
       html += `<div class="row ${s==="filled" ? (r.intern ? "rfilled rintern" : "rfilled") : (r.pending ? "rpend" : (r.external ? "rext" : ""))}" data-role="${idx}" title="Click for role details">
-        <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":(r.pending?"pend":"miss")}">${s==="filled" ? `<span class="whochip ${r.intern?'intern':''}">${r.who}</span>` : (r.pending ? "⏳ " + r.pending + " — pending" : " ")}</span></div>
+        <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":(r.pending?"pend":"miss")}">${s==="filled" ? `<span class="whochip ${r.intern?'intern':''}">${r.who}</span>` : (r.pending ? "⏳ " + r.pending + " — pending" : " ")}</span></div>
         <div class="lane">`;
       for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
       if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
       const left = Math.max(pct(r.start), 0);
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
-      // bars are always TRUE length (micro bars get just enough width for a compact
-      // label); each bar renders its full label and fitBarLabels() downgrades to the
-      // compact form only where the text genuinely doesn't fit
-      const durB = r.end - r.start;
+      // bars are ALWAYS true time-width so visual length = shift length.
+      // Where the label can't fit inside (even compacted), fitBarLabels()
+      // moves it outside the bar instead of stretching the bar.
       const trueW = pct(r.end)-pct(r.start);
-      const width = durB < 0.45 ? Math.max(trueW, 7.0) : Math.max(trueW, 1.2);
+      const width = Math.max(trueW, 0.6); // floor only so zero-length data stays clickable
       const compact = h => fmt(h).replace(/ [AP]M$/, "");
       const altLabel = compact(r.start) + "–" + compact(r.end);
       html += `<button class="bar ${s} ${(r.external && s!=="filled")?"ext":""} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
@@ -617,15 +634,31 @@ function syncStickyAxis(){
   head.style.transform = `translateX(${-inner.parentElement.scrollLeft}px)`;
 }
 
-// try the full label in each bar; where it overflows, fall back to the compact form
+// three-tier labels: full inside → compact inside → label OUTSIDE the bar.
+// Bars never grow to fit text; the text moves instead.
 function fitBarLabels(){
+  document.querySelectorAll(".lane .outlbl").forEach(el=>el.remove());
   document.querySelectorAll(".bar").forEach(b=>{
     b.classList.remove("tight");
     b.textContent = b.dataset.full;
-    if(b.scrollWidth > b.clientWidth + 2){
-      b.classList.add("tight");
-      b.textContent = b.dataset.alt;
+    if(b.scrollWidth <= b.clientWidth + 2) return;          // full label fits
+    b.classList.add("tight");
+    b.textContent = b.dataset.alt;
+    if(b.scrollWidth <= b.clientWidth + 2) return;          // compact label fits
+    // too narrow for any text — empty the bar, park the label beside it
+    b.textContent = "";
+    const lbl = document.createElement("span");
+    lbl.className = "outlbl";
+    lbl.textContent = b.dataset.alt;
+    const L = parseFloat(b.style.left) || 0;
+    const W = parseFloat(b.style.width) || 0;
+    if(L + W > 82){
+      // bar sits near the right edge — label goes on its LEFT
+      lbl.style.right = "calc(" + (100 - L) + "% + 5px)";
+    } else {
+      lbl.style.left = "calc(" + (L + W) + "% + 5px)";
     }
+    b.parentElement.appendChild(lbl);
   });
 }
 let fitTimer;
