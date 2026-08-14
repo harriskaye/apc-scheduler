@@ -174,7 +174,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
   border:none;font-family:inherit;
 }
 .bar:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
-.bar.tight{font-size:.68rem;padding:0 3px;justify-content:center;letter-spacing:-.01em}
+.bar.tight{font-size:.68rem;padding:0 3px;justify-content:center;letter-spacing:-.01em;border-radius:4px}
 .bar.filled{background:var(--orchard)}
 .bar.open{background:var(--apple-soft);color:var(--apple);border:1.5px dashed var(--apple)}
 .bar.intern.filled{background:var(--intern)}
@@ -616,7 +616,7 @@ function renderSched(){
       const width = Math.max(trueW, 0.6); // floor only so zero-length data stays clickable
       const compact = h => fmt(h).replace(/ [AP]M$/, "");
       const altLabel = compact(r.start) + "–" + compact(r.end);
-      html += `<button class="bar ${s} ${(r.external && s!=="filled")?"ext":""} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
+      html += `<button class="bar ${s} ${(r.external && s!=="filled")?"ext":""} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" data-min="${compact(r.start)}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
       html += `</div></div>`;
     });
   });
@@ -634,8 +634,8 @@ function syncStickyAxis(){
   head.style.transform = `translateX(${-inner.parentElement.scrollLeft}px)`;
 }
 
-// three-tier labels: full inside → compact inside → label OUTSIDE the bar.
-// Bars never grow to fit text; the text moves instead.
+// four-tier labels: full inside → compact range inside → start time inside →
+// range OUTSIDE the bar. Bars never grow to fit text; the text adapts instead.
 function fitBarLabels(){
   document.querySelectorAll(".lane .outlbl").forEach(el=>el.remove());
   document.querySelectorAll(".bar").forEach(b=>{
@@ -644,19 +644,24 @@ function fitBarLabels(){
     if(b.scrollWidth <= b.clientWidth + 2) return;          // full label fits
     b.classList.add("tight");
     b.textContent = b.dataset.alt;
-    if(b.scrollWidth <= b.clientWidth + 2) return;          // compact label fits
-    // too narrow for any text — empty the bar, park the label beside it
+    if(b.scrollWidth <= b.clientWidth + 2) return;          // compact range fits
+    b.textContent = b.dataset.min;
+    if(b.scrollWidth <= b.clientWidth + 2) return;          // start time alone fits
+    // too narrow for any text — empty the bar, park the range right beside it,
+    // tinted to match the bar so they read as one unit
     b.textContent = "";
     const lbl = document.createElement("span");
     lbl.className = "outlbl";
     lbl.textContent = b.dataset.alt;
+    const cs = getComputedStyle(b);
+    lbl.style.color = b.classList.contains("filled") ? cs.backgroundColor : cs.color;
     const L = parseFloat(b.style.left) || 0;
     const W = parseFloat(b.style.width) || 0;
     if(L + W > 82){
       // bar sits near the right edge — label goes on its LEFT
-      lbl.style.right = "calc(" + (100 - L) + "% + 5px)";
+      lbl.style.right = "calc(" + (100 - L) + "% + 4px)";
     } else {
-      lbl.style.left = "calc(" + (L + W) + "% + 5px)";
+      lbl.style.left = "calc(" + (L + W) + "% + 4px)";
     }
     b.parentElement.appendChild(lbl);
   });
