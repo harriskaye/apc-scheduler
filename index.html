@@ -180,6 +180,8 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 .bar.intern.filled{background:var(--intern)}
 .bar.intern.open{background:var(--intern-soft);color:var(--intern);border:1.5px dashed var(--intern)}
 .bar.est{opacity:.85}
+/* shift starts before the visible grid — flat left edge = "continues earlier" */
+.bar.clip{border-top-left-radius:0;border-bottom-left-radius:0;box-shadow:inset 3px 0 0 rgba(255,255,255,.45)}
 .bar .newtag{background:var(--apple);color:#fff;border-radius:3px;font-size:.55rem;padding:1px 4px;margin-left:5px;flex:none}
 /* label rendered beside a bar too narrow to hold its own text */
 .outlbl{
@@ -335,7 +337,10 @@ const AREA_ORDER = [
   "End of Day"
 ];
 
-const DAY_START = 4.5, DAY_END = 13.5;
+// Visible grid window. Early-morning ops (before DAY_START) still exist in the
+// data — their bars are clipped at the left edge with a flat edge and keep
+// their true times in the label.
+const DAY_START = 7, DAY_END = 13.5;
 
 /* ---------------- built-in snapshot (from the 2026 xlsx) ---------------- */
 /* Same shape the Airtable loader produces, so rendering is identical.     */
@@ -585,7 +590,7 @@ function renderSched(){
   const sched = document.getElementById("sched");
   // hour axis lives in the sticky bar so it stays visible while scrolling
   let ax = "";
-  for(let h=5; h<=13; h++) ax += `<span style="left:${pct(h)}%">${fmt(h)}</span>`;
+  for(let h=Math.ceil(DAY_START); h<=Math.floor(DAY_END); h++) ax += `<span style="left:${pct(h)}%">${fmt(h)}</span>`;
   document.getElementById("saAxis").innerHTML = ax;
   let html = "";
 
@@ -605,18 +610,22 @@ function renderSched(){
       html += `<div class="row ${s==="filled" ? (r.intern ? "rfilled rintern" : "rfilled") : (r.pending ? "rpend" : (r.external ? "rext" : ""))}" data-role="${idx}" title="Click for role details">
         <div class="rolecol">${r.role}${r.notes?'<span class="notedot">ⓘ</span>':''}${r.isnew?'<span class="newtag">NEW</span>':''}<span class="name ${s==="filled"?"":(r.pending?"pend":"miss")}">${s==="filled" ? `<span class="whochip ${r.intern?'intern':''}">${r.who}</span>` : (r.pending ? "⏳ " + r.pending + " — pending" : " ")}</span></div>
         <div class="lane">`;
-      for(let h=5; h<=13; h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
+      for(let h=Math.ceil(DAY_START); h<=Math.floor(DAY_END); h++) html += `<div class="gridline hour" style="left:${pct(h)}%"></div>`;
       if(dayofOn){ const nh = nowHours(); if(nh > DAY_START && nh < DAY_END) html += `<div class="nowline" style="left:${pct(nh)}%"></div>`; }
-      const left = Math.max(pct(r.start), 0);
+      // clip the drawn span to the visible window; labels keep the TRUE times
+      const clipL = r.start < DAY_START;
+      const s0 = Math.max(r.start, DAY_START);
+      const e0 = Math.max(Math.min(r.end, DAY_END), s0);
+      const left = pct(s0);
       const fullTimes = fmt(r.start) + "–" + fmt(r.end) + (r.est ? " est." : "");
       // bars are ALWAYS true time-width so visual length = shift length.
       // Where the label can't fit inside (even compacted), fitBarLabels()
       // moves it outside the bar instead of stretching the bar.
-      const trueW = pct(r.end)-pct(r.start);
-      const width = Math.max(trueW, 0.6); // floor only so zero-length data stays clickable
+      const trueW = pct(e0)-pct(s0);
+      const width = Math.max(trueW, 0.6); // floor keeps fully-off-grid shifts clickable
       const compact = h => fmt(h).replace(/ [AP]M$/, "");
       const altLabel = compact(r.start) + "–" + compact(r.end);
-      html += `<button class="bar ${s} ${(r.external && s!=="filled")?"ext":""} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
+      html += `<button class="bar ${s} ${clipL?"clip":""} ${(r.external && s!=="filled")?"ext":""} ${r.pending?'pend':''} ${r.intern?'intern':''} ${r.est?'est':''}" style="left:${left}%;width:${width}%" data-role="${idx}" data-full="${fullTimes}" data-alt="${altLabel}" title="${r.role} · ${fullTimes}">${fullTimes}</button>`;
       html += `</div></div>`;
     });
   });
