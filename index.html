@@ -175,6 +175,7 @@ h1{font-size:clamp(1.3rem,2.6vw,1.8rem);font-weight:900;line-height:1.1;letter-s
 }
 .bar:focus-visible{outline:3px solid var(--ink);outline-offset:1px}
 .bar.tight{font-size:.68rem;padding:0 3px;justify-content:center;letter-spacing:-.01em;border-radius:4px}
+.bar.stack{flex-direction:column;justify-content:center;font-size:.6rem;line-height:1.12;padding:0 2px;letter-spacing:-.02em;white-space:pre-line;text-align:center}
 .bar.filled{background:var(--orchard)}
 .bar.open{background:var(--apple-soft);color:var(--apple);border:1.5px dashed var(--apple)}
 .bar.intern.filled{background:var(--intern)}
@@ -643,20 +644,26 @@ function syncStickyAxis(){
   head.style.transform = `translateX(${-inner.parentElement.scrollLeft}px)`;
 }
 
-// label tiers: full range inside → compact range inside → compact range
-// OUTSIDE the bar. The start–end range is ALWAYS visible; only its position
-// and format adapt. Bars never grow to fit text.
+// label tiers: full range inside → compact range inside → range STACKED on
+// two lines inside → compact range OUTSIDE the bar. The start–end range is
+// ALWAYS visible; only its layout adapts. Bars never grow to fit text.
 function fitBarLabels(){
   document.querySelectorAll(".lane .outlbl").forEach(el=>el.remove());
   document.querySelectorAll(".bar").forEach(b=>{
-    b.classList.remove("tight");
+    b.classList.remove("tight","stack");
     b.textContent = b.dataset.full;
     if(b.scrollWidth <= b.clientWidth + 2) return;          // full label fits
     b.classList.add("tight");
     b.textContent = b.dataset.alt;
     if(b.scrollWidth <= b.clientWidth + 2) return;          // compact range fits
-    // too narrow for the range — empty the bar, park the FULL RANGE right
-    // beside it, tinted to match the bar so they read as one unit
+    // try the range stacked vertically: "7:30–" over "7:45"
+    b.classList.add("stack");
+    const dash = b.dataset.alt.indexOf("–");
+    b.textContent = b.dataset.alt.slice(0, dash+1) + "\n" + b.dataset.alt.slice(dash+1);
+    if(b.scrollWidth <= b.clientWidth + 2 && b.scrollHeight <= b.clientHeight + 2) return;
+    // too narrow even for one time per line — park the range right beside the
+    // bar, tinted to match so they read as one unit
+    b.classList.remove("stack");
     b.textContent = "";
     const lbl = document.createElement("span");
     lbl.className = "outlbl";
